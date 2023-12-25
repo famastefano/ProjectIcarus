@@ -183,7 +183,6 @@ protected:
 
 	EBallisticWeaponStatus Status;
 
-	FTraceHandle HitScanLineTraceHandle;
 	FTraceDelegate OnHitDelegate;
 
 	void OnHitScanCompleted(FTraceHandle const& TraceHandle, FTraceDatum& TraceDatum) const;

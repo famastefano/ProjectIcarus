@@ -233,6 +233,21 @@ void FBallisticWeaponComponent_Spec::Define()
 				TestTrueExpr(DelegateHandler->OnReloadRequestedCounter == 1);
 				TestTrueExpr(Component->CurrentMagazine == 0);
 			});
+
+			It("Should allow to fire again if enough time has passed", [this]
+			{
+				FComponentOptions Opt;
+				Opt.FireRateRpm = 600; // 10/s
+				Opt.HasInfiniteAmmo = true;
+				Opt.AmmoType.IsHitScan = true;
+				auto * Component = CreateAndAttachComponent(Opt);
+				Component->FireOnce();
+				World.Tick(0.5);
+				Component->FireOnce();
+				World.Tick(0.5);
+				Component->FireOnce();
+				TestTrueExpr(DelegateHandler->OnShotFiredCounter == 3);
+			});
 		});
 	});
 

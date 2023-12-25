@@ -168,7 +168,7 @@ void UBallisticWeaponComponent::Fire()
 		              FColor::Red, false, 1.f, 0, 0.5f);
 #endif
 
-		HitScanLineTraceHandle = World->AsyncLineTraceByChannel(
+		World->AsyncLineTraceByChannel(
 			EAsyncTraceType::Single,
 			MuzzleLocation,
 			MuzzleLocation + MuzzleDirection * MaximumDistance,
@@ -230,8 +230,6 @@ void UBallisticWeaponComponent::ReloadMagazine()
 
 void UBallisticWeaponComponent::OnHitScanCompleted(FTraceHandle const& TraceHandle, FTraceDatum& TraceDatum) const
 {
-	ensure(TraceHandle == HitScanLineTraceHandle);
-
 	if (!TraceDatum.OutHits.IsEmpty())
 	{
 		FHitResult const& HitResult = TraceDatum.OutHits[0];
