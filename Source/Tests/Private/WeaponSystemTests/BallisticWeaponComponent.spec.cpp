@@ -15,18 +15,68 @@ BEGIN_DEFINE_SPEC(FBallisticWeaponComponent_Spec, "Icarus.WeaponSystem.Ballistic
 	TObjectPtr<AActor> Actor;
 	TObjectPtr<UBallisticWeaponComponent> PrevComponent;
 
-	UBallisticWeaponComponent* AttachComponent(UBallisticWeaponComponent* NewComponent)
+	struct FComponentOptions
 	{
+		decltype(UBallisticWeaponComponent::HasInfiniteAmmo) HasInfiniteAmmo;
+		decltype(UBallisticWeaponComponent::HasInfiniteAmmoReserve) HasInfiniteAmmoReserve;
+		decltype(UBallisticWeaponComponent::ReloadingDiscardsEntireMagazine) ReloadingDiscardsEntireMagazine;
+		decltype(UBallisticWeaponComponent::MagazineSize) MagazineSize;
+		decltype(UBallisticWeaponComponent::AmmoUsedEachShot) AmmoUsedEachShot;
+		decltype(UBallisticWeaponComponent::CurrentMagazine) CurrentMagazine;
+		decltype(UBallisticWeaponComponent::AmmoReserve) AmmoReserve;
+		decltype(UBallisticWeaponComponent::FireRateRpm) FireRateRpm;
+		decltype(UBallisticWeaponComponent::IsBurstFire) IsBurstFire;
+		decltype(UBallisticWeaponComponent::ShotsFiredDuringBurstFire) ShotsFiredDuringBurstFire;
+		decltype(UBallisticWeaponComponent::SecondsToReload) SecondsToReload;
+		decltype(UBallisticWeaponComponent::AmmoType) AmmoType;
+
+		FComponentOptions()
+		{
+			UBallisticWeaponComponent const* CDO =
+				UBallisticWeaponComponent::StaticClass()
+				->GetDefaultObject<UBallisticWeaponComponent>();
+			HasInfiniteAmmo = CDO->HasInfiniteAmmo;
+			HasInfiniteAmmoReserve = CDO->HasInfiniteAmmoReserve;
+			ReloadingDiscardsEntireMagazine = CDO->ReloadingDiscardsEntireMagazine;
+			MagazineSize = CDO->MagazineSize;
+			AmmoUsedEachShot = CDO->AmmoUsedEachShot;
+			CurrentMagazine = CDO->CurrentMagazine;
+			AmmoReserve = CDO->AmmoReserve;
+			FireRateRpm = CDO->FireRateRpm;
+			IsBurstFire = CDO->IsBurstFire;
+			ShotsFiredDuringBurstFire = CDO->ShotsFiredDuringBurstFire;
+			SecondsToReload = CDO->SecondsToReload;
+			AmmoType = CDO->AmmoType;
+		}
+	};
+
+	UBallisticWeaponComponent* CreateAndAttachComponent(FComponentOptions const& Options = FComponentOptions())
+	{
+		check(IsInGameThread());
 		if (PrevComponent)
 		{
 			DelegateHandler->UnRegister(PrevComponent);
 			PrevComponent->DestroyComponent();
 		}
-		Actor->FinishAddComponent(NewComponent, false, FTransform::Identity);
-		PrevComponent = NewComponent;
-		if (NewComponent)
-			DelegateHandler->Register(PrevComponent);
-		return NewComponent;
+
+		PrevComponent = NewObject<UBallisticWeaponComponent>(Actor);
+		check(PrevComponent);
+		PrevComponent->HasInfiniteAmmo = Options.HasInfiniteAmmo;
+		PrevComponent->HasInfiniteAmmoReserve = Options.HasInfiniteAmmoReserve;
+		PrevComponent->ReloadingDiscardsEntireMagazine = Options.ReloadingDiscardsEntireMagazine;
+		PrevComponent->MagazineSize = Options.MagazineSize;
+		PrevComponent->AmmoUsedEachShot = Options.AmmoUsedEachShot;
+		PrevComponent->CurrentMagazine = Options.CurrentMagazine;
+		PrevComponent->AmmoReserve = Options.AmmoReserve;
+		PrevComponent->FireRateRpm = Options.FireRateRpm;
+		PrevComponent->IsBurstFire = Options.IsBurstFire;
+		PrevComponent->ShotsFiredDuringBurstFire = Options.ShotsFiredDuringBurstFire;
+		PrevComponent->SecondsToReload = Options.SecondsToReload;
+		PrevComponent->AmmoType = Options.AmmoType;
+
+		Actor->FinishAddComponent(PrevComponent, false, FTransform::Identity);
+		DelegateHandler->Register(PrevComponent);
+		return PrevComponent;
 	}
 
 END_DEFINE_SPEC(FBallisticWeaponComponent_Spec)
@@ -50,7 +100,7 @@ void FBallisticWeaponComponent_Spec::Define()
 		{
 			It("Shouldnt be ready to fire, if there is no ammo", [this]
 			{
-				auto const* Component = AttachComponent(NewObject<UBallisticWeaponComponent>(Actor));
+				auto const* Component = CreateAndAttachComponent();
 				TestTrueExpr(
 					Component->CurrentMagazine == 0
 					&& Component->GetStatus() == EBallisticWeaponStatus::WaitingReload);
@@ -58,27 +108,27 @@ void FBallisticWeaponComponent_Spec::Define()
 
 			It("Shouldnt be ready to fire, if there is not enough ammo in the magazine", [this]
 			{
-				auto* Component = NewObject<UBallisticWeaponComponent>(Actor);
-				Component->CurrentMagazine = 1;
-				Component->AmmoUsedEachShot = 2;
-				AttachComponent(Component);
+				FComponentOptions Opt;
+				Opt.CurrentMagazine = 1;
+				Opt.AmmoUsedEachShot = 2;
+				auto const* Component = CreateAndAttachComponent(Opt);
 				TestTrueExpr(Component->GetStatus() == EBallisticWeaponStatus::WaitingReload);
 			});
 
 			It("Should be ready to fire, if there is enough ammo in the magazine", [this]
 			{
-				auto* Component = NewObject<UBallisticWeaponComponent>(Actor);
-				Component->CurrentMagazine = 1;
-				Component->AmmoUsedEachShot = 1;
-				AttachComponent(Component);
+				FComponentOptions Opt;
+				Opt.CurrentMagazine = 1;
+				Opt.AmmoUsedEachShot = 1;
+				auto const* Component = CreateAndAttachComponent(Opt);
 				TestTrueExpr(Component->GetStatus() == EBallisticWeaponStatus::Ready);
 			});
 
 			It("Should be ready to fire, if it has infinite ammo", [this]
 			{
-				auto* Component = NewObject<UBallisticWeaponComponent>(Actor);
-				Component->HasInfiniteAmmo = true;
-				AttachComponent(Component);
+				FComponentOptions Opt;
+				Opt.HasInfiniteAmmo = true;
+				auto const* Component = CreateAndAttachComponent(Opt);
 				TestTrueExpr(Component->GetStatus() == EBallisticWeaponStatus::Ready);
 			});
 		});
@@ -87,7 +137,7 @@ void FBallisticWeaponComponent_Spec::Define()
 		{
 			It("Cant fire because there is no ammo", [this]
 			{
-				auto* Component = AttachComponent(NewObject<UBallisticWeaponComponent>(Actor));
+				auto* Component = CreateAndAttachComponent();
 				Component->FireOnce();
 				World.Tick();
 				TestTrueExpr(DelegateHandler->OnShotFiredCounter == 0);
@@ -95,10 +145,10 @@ void FBallisticWeaponComponent_Spec::Define()
 
 			It("Cant fire because there is not enough ammo in the magazine", [this]
 			{
-				auto* Component = NewObject<UBallisticWeaponComponent>(Actor);
-				Component->CurrentMagazine = 1;
-				Component->AmmoUsedEachShot = 2;
-				AttachComponent(Component);
+				FComponentOptions Opt;
+				Opt.CurrentMagazine = 1;
+				Opt.AmmoUsedEachShot = 2;
+				auto* Component = CreateAndAttachComponent(Opt);
 				Component->FireOnce();
 				World.Tick();
 				TestTrueExpr(DelegateHandler->OnShotFiredCounter == 0);
@@ -106,12 +156,12 @@ void FBallisticWeaponComponent_Spec::Define()
 
 			It("Cant fire if not enough time has been passed between the previous shot", [this]
 			{
-				auto* Component = NewObject<UBallisticWeaponComponent>(Actor);
-				Component->FireRateRpm = 60;
-				Component->CurrentMagazine = 2;
-				Component->AmmoUsedEachShot = 1;
-				Component->AmmoType.IsHitScan = true;
-				AttachComponent(Component);
+				FComponentOptions Opt;
+				Opt.FireRateRpm = 60;
+				Opt.CurrentMagazine = 2;
+				Opt.AmmoUsedEachShot = 1;
+				Opt.AmmoType.IsHitScan = true;
+				auto* Component = CreateAndAttachComponent(Opt);
 				Component->FireOnce();
 				World.Tick(0.125);
 				Component->FireOnce();
