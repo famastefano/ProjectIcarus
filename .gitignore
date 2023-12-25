@@ -1,0 +1,7 @@
+.idea/
+.vsconfig
+Binaries/
+Content/
+Intermediate/
+Saved/
+*.user
