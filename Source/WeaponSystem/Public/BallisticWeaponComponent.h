@@ -86,8 +86,8 @@ public:
 
 	// Fire rate in Rounds Per Minute.
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, BlueprintSetter=SetFireRate, Category="Weapon",
-		meta=(ClampMin=0, UIMin=0))
-	int FireRateRpm = 0;
+		meta=(ClampMin=1, UIMin=1))
+	int FireRateRpm = 1;
 
 	// If the weapon shoots in burst fire mode.
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Weapon")

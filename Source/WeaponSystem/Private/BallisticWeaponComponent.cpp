@@ -110,6 +110,7 @@ void UBallisticWeaponComponent::CancelReloading()
 
 double UBallisticWeaponComponent::GetSecondsBetweenShots() const
 {
+	check(FireRateRpm > 0);
 	return 1.0 / (FireRateRpm / 60.0);
 }
 
