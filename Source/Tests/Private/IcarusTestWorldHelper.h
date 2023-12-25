@@ -42,7 +42,7 @@ public:
 		return World;
 	}
 
-	void Tick(float DeltaTime) const;
+	void Tick(float DeltaTime = 0.001953125) const;
 	void TickUntil(float DeltaTime, TUniqueFunction<bool()> const& ShouldStopTicking) const;
 	void TickWithVariableDeltaTimeUntil(TUniqueFunction<float(float)> const& CalculateNextDeltaTime,
 	                                    TUniqueFunction<bool()> const& ShouldStopTicking) const;
