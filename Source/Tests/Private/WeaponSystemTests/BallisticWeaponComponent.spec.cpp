@@ -13,8 +13,7 @@ BEGIN_DEFINE_SPEC(FBallisticWeaponComponent_Spec, "Icarus.WeaponSystem.Ballistic
 	FIcarusTestWorldHelper World;
 	TObjectPtr<UBallisticWeaponComponentDelegateHandler> DelegateHandler;
 	TObjectPtr<AActor> Actor;
-
-	UBallisticWeaponComponent* PrevComponent{};
+	TObjectPtr<UBallisticWeaponComponent> PrevComponent;
 
 	UBallisticWeaponComponent* AttachComponent(UBallisticWeaponComponent* NewComponent)
 	{
@@ -79,6 +78,8 @@ void FBallisticWeaponComponent_Spec::Define()
 			DelegateHandler->UnRegister(PrevComponent);
 		DelegateHandler->ResetCounters();
 		Actor->Destroy();
+		Actor = nullptr;
+		PrevComponent = nullptr;
 	});
 }
 
