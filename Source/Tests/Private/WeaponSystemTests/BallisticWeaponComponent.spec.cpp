@@ -53,6 +53,15 @@ void FBallisticWeaponComponent_Spec::Define()
 					&& Component->GetStatus() == EBallisticWeaponStatus::WaitingReload);
 			});
 
+			It("Shouldn't be ready to fire, if there's not enough ammo in the magazine", [this]
+			{
+				auto* Component = NewObject<UBallisticWeaponComponent>(Actor);
+				Component->CurrentMagazine = 1;
+				Component->AmmoUsedEachShot = 2;
+				AttachComponent(Component);
+				TestTrueExpr(Component->GetStatus() == EBallisticWeaponStatus::WaitingReload);
+			});
+
 			It("Should be ready to fire, if there's enough ammo in the magazine", [this]
 			{
 				auto* Component = NewObject<UBallisticWeaponComponent>(Actor);
