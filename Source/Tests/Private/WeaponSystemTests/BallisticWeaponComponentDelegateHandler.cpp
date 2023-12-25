@@ -10,22 +10,22 @@ void UBallisticWeaponComponentDelegateHandler::OnReloadRequested()
 
 void UBallisticWeaponComponentDelegateHandler::OnReloadStarted()
 {
-	++OnReloadRequestedCounter;
+	++OnReloadStartedCounter;
 }
 
 void UBallisticWeaponComponentDelegateHandler::OnReloadCanceled()
 {
-	++OnReloadRequestedCounter;
+	++OnReloadCanceledCounter;
 }
 
 void UBallisticWeaponComponentDelegateHandler::OnReloadCompleted()
 {
-	++OnReloadRequestedCounter;
+	++OnReloadCompletedCounter;
 }
 
 void UBallisticWeaponComponentDelegateHandler::OnShotFired()
 {
-	++OnReloadRequestedCounter;
+	++OnShotFiredCounter;
 }
 
 void UBallisticWeaponComponentDelegateHandler::OnStatusChanged(EBallisticWeaponStatus NewStatus)
