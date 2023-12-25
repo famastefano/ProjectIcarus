@@ -168,6 +168,7 @@ void FBallisticWeaponComponent_Spec::Define()
 				World.Tick();
 				TestTrueExpr(DelegateHandler->OnShotFiredCounter == 1);
 			});
+
 			It("Should fire, if ammo are infinite", [this]
 			{
 				FComponentOptions Opt;
