@@ -48,7 +48,7 @@ void FBallisticWeaponComponent_Spec::Define()
 
 		Describe("When constructed", [this]
 		{
-			It("Shouldn't be ready to fire, if there's no ammo", [this]
+			It("Shouldnt be ready to fire, if there is no ammo", [this]
 			{
 				auto const* Component = AttachComponent(NewObject<UBallisticWeaponComponent>(Actor));
 				TestTrueExpr(
@@ -56,7 +56,7 @@ void FBallisticWeaponComponent_Spec::Define()
 					&& Component->GetStatus() == EBallisticWeaponStatus::WaitingReload);
 			});
 
-			It("Shouldn't be ready to fire, if there's not enough ammo in the magazine", [this]
+			It("Shouldnt be ready to fire, if there is not enough ammo in the magazine", [this]
 			{
 				auto* Component = NewObject<UBallisticWeaponComponent>(Actor);
 				Component->CurrentMagazine = 1;
@@ -65,7 +65,7 @@ void FBallisticWeaponComponent_Spec::Define()
 				TestTrueExpr(Component->GetStatus() == EBallisticWeaponStatus::WaitingReload);
 			});
 
-			It("Should be ready to fire, if there's enough ammo in the magazine", [this]
+			It("Should be ready to fire, if there is enough ammo in the magazine", [this]
 			{
 				auto* Component = NewObject<UBallisticWeaponComponent>(Actor);
 				Component->CurrentMagazine = 1;
@@ -80,6 +80,43 @@ void FBallisticWeaponComponent_Spec::Define()
 				Component->HasInfiniteAmmo = true;
 				AttachComponent(Component);
 				TestTrueExpr(Component->GetStatus() == EBallisticWeaponStatus::Ready);
+			});
+		});
+
+		Describe("When trying to fire once", [this]
+		{
+			It("Cant fire because there is no ammo", [this]
+			{
+				auto* Component = AttachComponent(NewObject<UBallisticWeaponComponent>(Actor));
+				Component->FireOnce();
+				World.Tick();
+				TestTrueExpr(DelegateHandler->OnShotFiredCounter == 0);
+			});
+
+			It("Cant fire because there is not enough ammo in the magazine", [this]
+			{
+				auto* Component = NewObject<UBallisticWeaponComponent>(Actor);
+				Component->CurrentMagazine = 1;
+				Component->AmmoUsedEachShot = 2;
+				AttachComponent(Component);
+				Component->FireOnce();
+				World.Tick();
+				TestTrueExpr(DelegateHandler->OnShotFiredCounter == 0);
+			});
+
+			It("Cant fire if not enough time has been passed between the previous shot", [this]
+			{
+				auto* Component = NewObject<UBallisticWeaponComponent>(Actor);
+				Component->FireRateRpm = 60;
+				Component->CurrentMagazine = 2;
+				Component->AmmoUsedEachShot = 1;
+				Component->AmmoType.IsHitScan = true;
+				AttachComponent(Component);
+				Component->FireOnce();
+				World.Tick(0.125);
+				Component->FireOnce();
+				World.Tick();
+				TestTrueExpr(DelegateHandler->OnShotFiredCounter == 1);
 			});
 		});
 	});
