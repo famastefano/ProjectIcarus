@@ -49,8 +49,8 @@ void FBallisticWeaponComponent_Spec::Define()
 			{
 				auto const* Component = AttachComponent(NewObject<UBallisticWeaponComponent>(Actor));
 				TestTrueExpr(
-					Component->CurrentMagazine == 0 && Component->GetStatus() == EBallisticWeaponStatus::
-					WaitingReload);
+					Component->CurrentMagazine == 0
+					&& Component->GetStatus() == EBallisticWeaponStatus::WaitingReload);
 			});
 
 			It("Should be ready to fire, if there's enough ammo in the magazine", [this]
