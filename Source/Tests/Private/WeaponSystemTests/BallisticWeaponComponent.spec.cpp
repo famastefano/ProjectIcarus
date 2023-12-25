@@ -18,7 +18,10 @@ BEGIN_DEFINE_SPEC(FBallisticWeaponComponent_Spec, "Icarus.WeaponSystem.Ballistic
 	UBallisticWeaponComponent* AttachComponent(UBallisticWeaponComponent* NewComponent)
 	{
 		if (PrevComponent)
+		{
 			DelegateHandler->UnRegister(PrevComponent);
+			PrevComponent->DestroyComponent();
+		}
 		Actor->FinishAddComponent(NewComponent, false, FTransform::Identity);
 		PrevComponent = NewComponent;
 		if (NewComponent)
