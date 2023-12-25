@@ -168,6 +168,70 @@ void FBallisticWeaponComponent_Spec::Define()
 				World.Tick();
 				TestTrueExpr(DelegateHandler->OnShotFiredCounter == 1);
 			});
+			It("Should fire, if ammo are infinite", [this]
+			{
+				FComponentOptions Opt;
+				Opt.HasInfiniteAmmo = true;
+				Opt.AmmoType.IsHitScan = true;
+				auto* Component = CreateAndAttachComponent(Opt);
+				Component->FireOnce();
+				World.Tick();
+				TestTrueExpr(DelegateHandler->OnShotFiredCounter == 1);
+			});
+
+			It("Shouldnt modify the magazine if ammo are infinite", [this]
+			{
+				FComponentOptions Opt;
+				Opt.HasInfiniteAmmo = true;
+				Opt.CurrentMagazine = 1;
+				Opt.AmmoUsedEachShot = 2;
+				Opt.AmmoType.IsHitScan = true;
+				auto* Component = CreateAndAttachComponent(Opt);
+				Component->FireOnce();
+				World.Tick();
+				TestTrueExpr(DelegateHandler->OnShotFiredCounter == 1);
+				TestTrueExpr(Component->CurrentMagazine == 1);
+			});
+
+			It("Shouldnt modify the magazine, if no ammo are consumed each shot", [this]
+			{
+				FComponentOptions Opt;
+				Opt.CurrentMagazine = 10;
+				Opt.AmmoUsedEachShot = 0;
+				Opt.AmmoType.IsHitScan = true;
+				auto* Component = CreateAndAttachComponent(Opt);
+				Component->FireOnce();
+				World.Tick();
+				TestTrueExpr(DelegateHandler->OnShotFiredCounter == 1);
+				TestTrueExpr(Component->CurrentMagazine == 10);
+			});
+
+			It("Should update the magazine, if it consumes ammo each shot", [this]
+			{
+				FComponentOptions Opt;
+				Opt.CurrentMagazine = 10;
+				Opt.AmmoUsedEachShot = 8;
+				Opt.AmmoType.IsHitScan = true;
+				auto* Component = CreateAndAttachComponent(Opt);
+				Component->FireOnce();
+				World.Tick();
+				TestTrueExpr(DelegateHandler->OnShotFiredCounter == 1);
+				TestTrueExpr(Component->CurrentMagazine == 2);
+			});
+
+			It("Should request to reload, if the magazine is depleted", [this]
+			{
+				FComponentOptions Opt;
+				Opt.CurrentMagazine = 2;
+				Opt.AmmoUsedEachShot = 2;
+				Opt.AmmoType.IsHitScan = true;
+				auto* Component = CreateAndAttachComponent(Opt);
+				Component->FireOnce();
+				World.Tick();
+				TestTrueExpr(DelegateHandler->OnShotFiredCounter == 1);
+				TestTrueExpr(DelegateHandler->OnReloadRequestedCounter == 1);
+				TestTrueExpr(Component->CurrentMagazine == 0);
+			});
 		});
 	});
 
