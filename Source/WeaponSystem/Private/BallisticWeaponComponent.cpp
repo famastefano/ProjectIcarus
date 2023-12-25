@@ -39,8 +39,8 @@ UBallisticWeaponComponent::UBallisticWeaponComponent()
 
 void UBallisticWeaponComponent::BeginPlay()
 {
-	LastFireTimestamp = 0;
 	SecondsBetweenEachShot = GetSecondsBetweenShots();
+	LastFireTimestamp = -SecondsBetweenEachShot;
 	Status = HasEnoughAmmoToFire() ? EBallisticWeaponStatus::Ready : EBallisticWeaponStatus::WaitingReload;
 	OnHitDelegate.BindUObject(this, &UBallisticWeaponComponent::OnHitScanCompleted);
 	Super::BeginPlay();
