@@ -87,6 +87,10 @@ void UBallisticWeaponComponent::StartFiring()
 	if (Status == EBallisticWeaponStatus::Ready && HasEnoughAmmoToFire() && HasEnoughTimePassedFromLastShot())
 	{
 		Status = EBallisticWeaponStatus::Firing;
+		if (IsBurstFire)
+		{
+			CurrentBurstFiringCount = ShotsFiredDuringBurstFire;
+		}
 		if (OnStatusChanged.IsBound())
 		{
 			OnStatusChanged.Broadcast(Status);
@@ -174,7 +178,10 @@ void UBallisticWeaponComponent::TickComponent(float DeltaTime, ELevelTick TickTy
 		{
 			if (HasEnoughTimePassedFromLastShot())
 			{
-				Fire();
+				if (!IsBurstFire || CurrentBurstFiringCount > 0)
+				{
+					Fire();
+				}
 			}
 		}
 		else
@@ -261,6 +268,18 @@ void UBallisticWeaponComponent::Fire()
 			if (OnStatusChanged.IsBound())
 			{
 				OnStatusChanged.Broadcast(Status);
+			}
+		}
+	}
+
+	if (IsBurstFire)
+	{
+		if (--CurrentBurstFiringCount <= 0 && Status == EBallisticWeaponStatus::Firing)
+		{
+			Status = HasEnoughAmmoToFire() ? EBallisticWeaponStatus::Ready : EBallisticWeaponStatus::WaitingReload;
+			if (Status == EBallisticWeaponStatus::WaitingReload && OnReloadRequested.IsBound())
+			{
+				OnReloadRequested.Broadcast();
 			}
 		}
 	}

@@ -184,6 +184,7 @@ protected:
 	double LastFireTimestamp;
 	double SecondsBetweenEachShot;
 	double ReloadTimestamp;
+	int CurrentBurstFiringCount;
 
 	EBallisticWeaponStatus Status;
 
