@@ -36,7 +36,7 @@ BEGIN_DEFINE_SPEC(FBallisticWeaponComponent_Spec, "Icarus.WeaponSystem.Ballistic
 
 		FComponentOptions()
 		{
-			UBallisticWeaponComponent const* CDO =
+			const UBallisticWeaponComponent* CDO =
 				UBallisticWeaponComponent::StaticClass()
 				->GetDefaultObject<UBallisticWeaponComponent>();
 			HasInfiniteAmmo = CDO->HasInfiniteAmmo;
@@ -54,7 +54,7 @@ BEGIN_DEFINE_SPEC(FBallisticWeaponComponent_Spec, "Icarus.WeaponSystem.Ballistic
 		}
 	};
 
-	UBallisticWeaponComponent* CreateAndAttachComponent(FComponentOptions const& Options = FComponentOptions())
+	UBallisticWeaponComponent* CreateAndAttachComponent(const FComponentOptions& Options = FComponentOptions())
 	{
 		check(IsInGameThread());
 		if (PrevComponent)
@@ -93,10 +93,14 @@ void FBallisticWeaponComponent_Spec::Define()
 		{
 			UE_LOGFMT(LogIcarusTests, Log, "Test {Name} started.", GetTestFullName());
 			if (!Subsystem)
+			{
 				Subsystem = GEngine->GetEngineSubsystem<UIcarusTestSubsystem>();
+			}
 			World = Subsystem->GetSharedWorld();
 			if (!DelegateHandler)
+			{
 				DelegateHandler = NewObject<UBallisticWeaponComponentDelegateHandler>();
+			}
 
 			Actor = World->SpawnActor<AIcarusTestActor>();
 		});
@@ -105,7 +109,7 @@ void FBallisticWeaponComponent_Spec::Define()
 		{
 			It("Shouldnt be ready to fire, if there is no ammo", [this]
 			{
-				auto const* Component = CreateAndAttachComponent();
+				const auto* Component = CreateAndAttachComponent();
 				TestTrueExpr(
 					Component->CurrentMagazine == 0
 					&& Component->GetStatus() == EBallisticWeaponStatus::WaitingReload);
@@ -116,7 +120,7 @@ void FBallisticWeaponComponent_Spec::Define()
 				FComponentOptions Opt;
 				Opt.CurrentMagazine = 1;
 				Opt.AmmoUsedEachShot = 2;
-				auto const* Component = CreateAndAttachComponent(Opt);
+				const auto* Component = CreateAndAttachComponent(Opt);
 				TestTrueExpr(Component->GetStatus() == EBallisticWeaponStatus::WaitingReload);
 			});
 
@@ -125,7 +129,7 @@ void FBallisticWeaponComponent_Spec::Define()
 				FComponentOptions Opt;
 				Opt.CurrentMagazine = 1;
 				Opt.AmmoUsedEachShot = 1;
-				auto const* Component = CreateAndAttachComponent(Opt);
+				const auto* Component = CreateAndAttachComponent(Opt);
 				TestTrueExpr(Component->GetStatus() == EBallisticWeaponStatus::Ready);
 			});
 
@@ -133,7 +137,7 @@ void FBallisticWeaponComponent_Spec::Define()
 			{
 				FComponentOptions Opt;
 				Opt.HasInfiniteAmmo = true;
-				auto const* Component = CreateAndAttachComponent(Opt);
+				const auto* Component = CreateAndAttachComponent(Opt);
 				TestTrueExpr(Component->GetStatus() == EBallisticWeaponStatus::Ready);
 			});
 		});
@@ -400,7 +404,9 @@ void FBallisticWeaponComponent_Spec::Define()
 	AfterEach([this]
 	{
 		if (PrevComponent)
+		{
 			DelegateHandler->UnRegister(PrevComponent);
+		}
 		DelegateHandler->ResetCounters();
 		Actor->Destroy();
 		Actor = nullptr;
