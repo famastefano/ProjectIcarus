@@ -380,18 +380,20 @@ void FBallisticWeaponComponent_Spec::Define()
 				TestTrueExpr(Component->CurrentMagazine == 5 && Component->AmmoReserve == 5);
 			});
 
-			It("Should fill the magazine with all the ammo reserve, if the reserve has less ammo than the amount required to fill the mag", [this]
-			{
-				FComponentOptions Opt;
-				Opt.AmmoReserve = 1;
-				Opt.MagazineSize = 5;
-				Opt.CurrentMagazine = 3;
-				Opt.SecondsToReload = 0;
-				auto* Component = CreateAndAttachComponent(Opt);
-				Component->StartReloading();
-				World.Tick();
-				TestTrueExpr(Component->CurrentMagazine == 4 && Component->AmmoReserve == 0);
-			});
+			It(
+				"Should fill the magazine with all the ammo reserve, if the reserve has less ammo than the amount required to fill the mag",
+				[this]
+				{
+					FComponentOptions Opt;
+					Opt.AmmoReserve = 1;
+					Opt.MagazineSize = 5;
+					Opt.CurrentMagazine = 3;
+					Opt.SecondsToReload = 0;
+					auto* Component = CreateAndAttachComponent(Opt);
+					Component->StartReloading();
+					World.Tick();
+					TestTrueExpr(Component->CurrentMagazine == 4 && Component->AmmoReserve == 0);
+				});
 		});
 	});
 
