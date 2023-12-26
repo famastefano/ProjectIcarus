@@ -10,7 +10,7 @@
 #include "IcarusTestSubsystem.h"
 
 BEGIN_DEFINE_SPEC(FBallisticWeaponComponent_Spec, "Icarus.WeaponSystem.BallisticWeaponComponent",
-                  EAutomationTestFlags::EditorContext | EAutomationTestFlags::ServerContext
+                  EAutomationTestFlags::ApplicationContextMask
                   | EAutomationTestFlags::HighPriority | EAutomationTestFlags::ProductFilter)
 
 	TObjectPtr<UIcarusTestSubsystem> Subsystem;
