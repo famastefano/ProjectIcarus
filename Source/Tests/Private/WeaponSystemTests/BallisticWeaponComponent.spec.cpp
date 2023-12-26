@@ -399,19 +399,19 @@ void FBallisticWeaponComponent_Spec::Define()
 					TestTrueExpr(Component->CurrentMagazine == 4 && Component->AmmoReserve == 0);
 				});
 		});
-	});
 
-	AfterEach([this]
-	{
-		if (PrevComponent)
+		AfterEach([this]
 		{
-			DelegateHandler->UnRegister(PrevComponent);
-		}
-		DelegateHandler->ResetCounters();
-		Actor->Destroy();
-		Actor = nullptr;
-		PrevComponent = nullptr;
-		UE_LOGFMT(LogIcarusTests, Log, "Test ended.");
+			if (PrevComponent)
+			{
+				DelegateHandler->UnRegister(PrevComponent);
+			}
+			DelegateHandler->ResetCounters();
+			Actor->Destroy();
+			Actor = nullptr;
+			PrevComponent = nullptr;
+			UE_LOGFMT(LogIcarusTests, Log, "Test ended.");
+		});
 	});
 }
 
