@@ -79,6 +79,7 @@ void UBallisticWeaponComponent::FireOnce()
 			}
 		}
 		Fire();
+		UpdateMagazineAfterFiring();
 	}
 }
 
@@ -100,6 +101,7 @@ void UBallisticWeaponComponent::StartFiring()
 			OnFiringStarted.Broadcast();
 		}
 		Fire();
+		UpdateMagazineAfterFiring();
 	}
 }
 
@@ -194,6 +196,7 @@ void UBallisticWeaponComponent::TickComponent(float DeltaTime, ELevelTick TickTy
 				if (!IsBurstFire || CurrentBurstFiringCount > 0)
 				{
 					Fire();
+					UpdateMagazineAfterFiring();
 				}
 			}
 		}
@@ -264,31 +267,6 @@ void UBallisticWeaponComponent::Fire()
 		OnShotFired.Broadcast();
 	}
 
-	if (LIKELY(!HasInfiniteAmmo))
-	{
-		CurrentMagazine -= AmmoUsedEachShot;
-#if !UE_BUILD_SHIPPING
-		if (CurrentMagazine < 0)
-		{
-			UE_LOGFMT(LogWeaponSystem, Error,
-			          "Invalid magazine, this weapon shouldn't have fired at all. Magazine {Magazine}, Rounds per shot {RoundsPerShot}.",
-			          CurrentMagazine, AmmoUsedEachShot);
-		}
-#endif
-		if (CurrentMagazine <= 0)
-		{
-			Status = EBallisticWeaponStatus::WaitingReload;
-			if (OnReloadRequested.IsBound())
-			{
-				OnReloadRequested.Broadcast();
-			}
-			if (OnStatusChanged.IsBound())
-			{
-				OnStatusChanged.Broadcast(Status);
-			}
-		}
-	}
-
 	if (IsBurstFire)
 	{
 		if (--CurrentBurstFiringCount <= 0 && Status == EBallisticWeaponStatus::Firing)
@@ -304,6 +282,34 @@ void UBallisticWeaponComponent::Fire()
 	if (Status != EBallisticWeaponStatus::Firing && OnFiringStopped.IsBound())
 	{
 		OnFiringStopped.Broadcast();
+	}
+}
+
+void UBallisticWeaponComponent::UpdateMagazineAfterFiring()
+{
+	if (LIKELY(!HasInfiniteAmmo))
+	{
+		CurrentMagazine -= AmmoUsedEachShot;
+#if !UE_BUILD_SHIPPING
+		if (CurrentMagazine < 0)
+		{
+			UE_LOGFMT(LogWeaponSystem, Error,
+			          "Invalid magazine, this weapon shouldn't have fired at all. Magazine {Magazine}, Rounds per shot {RoundsPerShot}.",
+			          CurrentMagazine, AmmoUsedEachShot);
+		}
+#endif
+		if (CurrentMagazine <= 0 && Status != EBallisticWeaponStatus::WaitingReload)
+		{
+			Status = EBallisticWeaponStatus::WaitingReload;
+			if (OnReloadRequested.IsBound())
+			{
+				OnReloadRequested.Broadcast();
+			}
+			if (OnStatusChanged.IsBound())
+			{
+				OnStatusChanged.Broadcast(Status);
+			}
+		}
 	}
 }
 

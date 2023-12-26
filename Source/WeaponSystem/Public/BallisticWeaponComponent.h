@@ -192,6 +192,7 @@ public:
 
 protected:
 	void Fire();
+	void UpdateMagazineAfterFiring();
 	void ReloadMagazine();
 
 	double LastFireTimestamp;
