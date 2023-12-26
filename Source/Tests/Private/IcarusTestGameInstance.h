@@ -17,5 +17,6 @@ class TESTS_API UIcarusTestGameInstance : public UGameInstance
 public:
 	void InitForTest(UWorld& World);
 	virtual TSubclassOf<AGameModeBase> OverrideGameModeClass(TSubclassOf<AGameModeBase> GameModeClass,
-		const FString& MapName, const FString& Options, const FString& Portal) const override;
+	                                                         const FString& MapName, const FString& Options,
+	                                                         const FString& Portal) const override;
 };

@@ -13,5 +13,4 @@ UCLASS()
 class ICARUS_API AIcarusGameModeBase : public AGameModeBase
 {
 	GENERATED_BODY()
-	
 };

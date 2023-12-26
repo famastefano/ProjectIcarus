@@ -57,7 +57,9 @@ void UBallisticWeaponComponent::SetFireRate(int NewFireRateInRpm)
 {
 #if !UE_BUILD_SHIPPING
 	if (NewFireRateInRpm <= 0)
+	{
 		UE_LOGFMT(LogWeaponSystem, Error, "Invalid new fire rate: {NewFireRate} RPM.", NewFireRateInRpm);
+	}
 #endif
 
 	FireRateRpm = NewFireRateInRpm;
@@ -72,7 +74,9 @@ void UBallisticWeaponComponent::FireOnce()
 		{
 			Status = EBallisticWeaponStatus::Firing;
 			if (OnStatusChanged.IsBound())
+			{
 				OnStatusChanged.Broadcast(Status);
+			}
 		}
 		Fire();
 	}
@@ -84,7 +88,9 @@ void UBallisticWeaponComponent::StartFiring()
 	{
 		Status = EBallisticWeaponStatus::Firing;
 		if (OnStatusChanged.IsBound())
+		{
 			OnStatusChanged.Broadcast(Status);
+		}
 		Fire();
 	}
 }
@@ -97,10 +103,14 @@ void UBallisticWeaponComponent::StopFiring()
 		if (Status == EBallisticWeaponStatus::WaitingReload)
 		{
 			if (OnReloadRequested.IsBound())
+			{
 				OnReloadRequested.Broadcast();
+			}
 		}
 		if (OnStatusChanged.IsBound())
+		{
 			OnStatusChanged.Broadcast(Status);
+		}
 	}
 }
 
@@ -109,9 +119,13 @@ void UBallisticWeaponComponent::StartReloading()
 	Status = EBallisticWeaponStatus::Reloading;
 	ReloadTimestamp = GetWorld()->TimeSeconds + SecondsToReload;
 	if (OnReloadStarted.IsBound())
+	{
 		OnReloadStarted.Broadcast();
+	}
 	if (OnStatusChanged.IsBound())
+	{
 		OnStatusChanged.Broadcast(Status);
+	}
 }
 
 void UBallisticWeaponComponent::CancelReloading()
@@ -120,11 +134,17 @@ void UBallisticWeaponComponent::CancelReloading()
 	{
 		Status = HasEnoughAmmoToFire() ? EBallisticWeaponStatus::Ready : EBallisticWeaponStatus::WaitingReload;
 		if (Status == EBallisticWeaponStatus::WaitingReload && OnReloadRequested.IsBound())
+		{
 			OnReloadRequested.Broadcast();
+		}
 		if (OnReloadCanceled.IsBound())
+		{
 			OnReloadCanceled.Broadcast();
+		}
 		if (OnStatusChanged.IsBound())
+		{
 			OnStatusChanged.Broadcast(Status);
+		}
 	}
 }
 
@@ -153,15 +173,21 @@ void UBallisticWeaponComponent::TickComponent(float DeltaTime, ELevelTick TickTy
 		if (HasEnoughAmmoToFire())
 		{
 			if (HasEnoughTimePassedFromLastShot())
+			{
 				Fire();
+			}
 		}
 		else
 		{
 			Status = EBallisticWeaponStatus::WaitingReload;
 			if (OnReloadRequested.IsBound())
+			{
 				OnReloadRequested.Broadcast();
+			}
 			if (OnStatusChanged.IsBound())
+			{
 				OnStatusChanged.Broadcast(Status);
+			}
 		}
 	}
 	else if (Status == EBallisticWeaponStatus::Reloading && GetWorld()->TimeSeconds >= ReloadTimestamp)
@@ -174,8 +200,8 @@ void UBallisticWeaponComponent::Fire()
 {
 	UWorld* World = GetWorld();
 	checkf(World, TEXT("Tried to fire a weapon without a World available."));
-	FVector const MuzzleLocation = GetComponentLocation();
-	FVector const MuzzleDirection = GetForwardVector();
+	const FVector MuzzleLocation = GetComponentLocation();
+	const FVector MuzzleDirection = GetForwardVector();
 
 	LastFireTimestamp = World->TimeSeconds;
 
@@ -202,30 +228,40 @@ void UBallisticWeaponComponent::Fire()
 	{
 #if !UE_BUILD_SHIPPING
 		if (!AmmoType.ProjectileClass)
+		{
 			UE_LOGFMT(LogWeaponSystem, Error, "AmmoType can't fire a projectile if ProjectileClass isn't set!");
+		}
 #endif
 		// TODO: Spawn Projectile Component
 	}
 
 	if (OnShotFired.IsBound())
+	{
 		OnShotFired.Broadcast();
+	}
 
 	if (LIKELY(!HasInfiniteAmmo))
 	{
 		CurrentMagazine -= AmmoUsedEachShot;
 #if !UE_BUILD_SHIPPING
 		if (CurrentMagazine < 0)
+		{
 			UE_LOGFMT(LogWeaponSystem, Error,
-		          "Invalid magazine, this weapon shouldn't have fired at all. Magazine {Magazine}, Rounds per shot {RoundsPerShot}.",
-		          CurrentMagazine, AmmoUsedEachShot);
+			          "Invalid magazine, this weapon shouldn't have fired at all. Magazine {Magazine}, Rounds per shot {RoundsPerShot}.",
+			          CurrentMagazine, AmmoUsedEachShot);
+		}
 #endif
 		if (CurrentMagazine <= 0)
 		{
 			Status = EBallisticWeaponStatus::WaitingReload;
 			if (OnReloadRequested.IsBound())
+			{
 				OnReloadRequested.Broadcast();
+			}
 			if (OnStatusChanged.IsBound())
+			{
 				OnStatusChanged.Broadcast(Status);
+			}
 		}
 	}
 }
@@ -233,41 +269,49 @@ void UBallisticWeaponComponent::Fire()
 void UBallisticWeaponComponent::ReloadMagazine()
 {
 	if (ReloadingDiscardsEntireMagazine)
+	{
 		CurrentMagazine = 0;
+	}
 
 	checkf(MagazineSize >= CurrentMagazine, TEXT("Precondition MagazineSize >= CurrentMagazine (%d >= %d) is false."),
 	       MagazineSize, CurrentMagazine);
 
 	if (LIKELY(!HasInfiniteAmmoReserve))
 	{
-		int16 const MissingRounds = MagazineSize - CurrentMagazine;
-		int16 const RoundsAvailable = AmmoReserve >= MissingRounds ? MissingRounds : AmmoReserve;
+		const int16 MissingRounds = MagazineSize - CurrentMagazine;
+		const int16 RoundsAvailable = AmmoReserve >= MissingRounds ? MissingRounds : AmmoReserve;
 		if (RoundsAvailable > 0)
 		{
 			CurrentMagazine += RoundsAvailable;
 			AmmoReserve -= RoundsAvailable;
 			if (OnReloadCompleted.IsBound())
+			{
 				OnReloadCompleted.Broadcast();
+			}
 		}
 		else
 		{
 			if (OnReloadFailed.IsBound())
+			{
 				OnReloadFailed.Broadcast();
+			}
 		}
 	}
 	else
 	{
 		CurrentMagazine = MagazineSize;
 		if (OnReloadCompleted.IsBound())
+		{
 			OnReloadCompleted.Broadcast();
+		}
 	}
 }
 
-void UBallisticWeaponComponent::OnHitScanCompleted(FTraceHandle const& TraceHandle, FTraceDatum& TraceDatum) const
+void UBallisticWeaponComponent::OnHitScanCompleted(const FTraceHandle& TraceHandle, FTraceDatum& TraceDatum) const
 {
 	if (!TraceDatum.OutHits.IsEmpty())
 	{
-		FHitResult const& HitResult = TraceDatum.OutHits[0];
+		const FHitResult& HitResult = TraceDatum.OutHits[0];
 
 		UE_LOGFMT(LogWeaponSystem, Verbose, "Hit {Actor}, {Distance} cm far", *HitResult.GetActor()->GetName(),
 		          HitResult.Distance);
@@ -276,7 +320,7 @@ void UBallisticWeaponComponent::OnHitScanCompleted(FTraceHandle const& TraceHand
 		{
 			// TODO: Calculate damage falloff based on distance
 			AActor* Owner = GetOwner();
-			FDamageEvent const DamageEvent{AmmoType.DamageType};
+			const FDamageEvent DamageEvent{AmmoType.DamageType};
 			ActorHit->TakeDamage(AmmoType.DamageAmount, DamageEvent, Owner->GetInstigatorController(), Owner);
 		}
 	}

@@ -54,7 +54,7 @@ void UIcarusTestSubsystem::Deinitialize()
 
 	if (!PrivateWorlds.IsEmpty())
 	{
-		for (auto const& [Name, Env] : PrivateWorlds)
+		for (const auto& [Name, Env] : PrivateWorlds)
 		{
 			UE_LOGFMT(LogIcarusTests, Warning, "World {Name} wasn't disposed during test cleanup.", Name);
 			Env.World->DestroyWorld(true);
@@ -63,7 +63,7 @@ void UIcarusTestSubsystem::Deinitialize()
 		PrivateWorlds.Empty();
 	}
 
-	if(SharedWorld.World)
+	if (SharedWorld.World)
 	{
 		SharedWorld.World->DestroyWorld(true);
 		SharedWorld.GameInstance->RemoveFromRoot();
@@ -76,16 +76,20 @@ FIcarusTestWorldHelper UIcarusTestSubsystem::GetPrivateWorld(FName Name)
 {
 	check(IsInGameThread());
 	if (const FTestWorldData* Data = PrivateWorlds.Find(Name))
+	{
 		return FIcarusTestWorldHelper{this, Data->World, false};
+	}
 
-	auto const& [GameInstance, World] = PrivateWorlds.Add(Name, MakeTestWorld(Name));
+	const auto& [GameInstance, World] = PrivateWorlds.Add(Name, MakeTestWorld(Name));
 	return FIcarusTestWorldHelper{this, World, false};
 }
 
 FIcarusTestWorldHelper UIcarusTestSubsystem::GetSharedWorld()
 {
 	if (!SharedWorld.World)
+	{
 		SharedWorld = MakeTestWorld("IcarusTestSharedWorld");
+	}
 
 	FIcarusTestWorldHelper Helper{this, SharedWorld.World, true};
 	return Helper;
@@ -93,7 +97,7 @@ FIcarusTestWorldHelper UIcarusTestSubsystem::GetSharedWorld()
 
 void UIcarusTestSubsystem::DestroyPrivateWorld(FName Name)
 {
-	auto const& [GameInstance, World] = PrivateWorlds.FindAndRemoveChecked(Name);
+	const auto& [GameInstance, World] = PrivateWorlds.FindAndRemoveChecked(Name);
 	World->DestroyWorld(true);
 	GameInstance->RemoveFromRoot();
 	UE_LOGFMT(LogIcarusTests, Log, "Destroyed test world {Name}.", Name);

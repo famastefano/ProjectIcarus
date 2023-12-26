@@ -17,7 +17,9 @@ void UIcarusTestGameInstance::InitForTest(UWorld& World)
 }
 
 TSubclassOf<AGameModeBase> UIcarusTestGameInstance::OverrideGameModeClass(TSubclassOf<AGameModeBase> GameModeClass,
-	const FString& MapName, const FString& Options, const FString& Portal) const
+                                                                          const FString& MapName,
+                                                                          const FString& Options,
+                                                                          const FString& Portal) const
 {
 	return AIcarusTestGameMode::StaticClass();
 }

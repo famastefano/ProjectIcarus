@@ -27,8 +27,8 @@ public:
 	                                UWorld* World,
 	                                bool IsSharedWorld);
 
-	FIcarusTestWorldHelper(FIcarusTestWorldHelper const&) = delete;
-	FIcarusTestWorldHelper& operator=(FIcarusTestWorldHelper const&) = delete;
+	FIcarusTestWorldHelper(const FIcarusTestWorldHelper&) = delete;
+	FIcarusTestWorldHelper& operator=(const FIcarusTestWorldHelper&) = delete;
 
 	FIcarusTestWorldHelper(FIcarusTestWorldHelper&& Other) noexcept;
 	FIcarusTestWorldHelper& operator=(FIcarusTestWorldHelper&& Other) noexcept;
@@ -42,7 +42,7 @@ public:
 	}
 
 	void Tick(float DeltaTime = 0.001953125) const;
-	void TickUntil(float DeltaTime, TUniqueFunction<bool()> const& ShouldStopTicking) const;
-	void TickWithVariableDeltaTimeUntil(TUniqueFunction<float(float)> const& CalculateNextDeltaTime,
-	                                    TUniqueFunction<bool()> const& ShouldStopTicking) const;
+	void TickUntil(float DeltaTime, const TUniqueFunction<bool()>& ShouldStopTicking) const;
+	void TickWithVariableDeltaTimeUntil(const TUniqueFunction<float(float)>& CalculateNextDeltaTime,
+	                                    const TUniqueFunction<bool()>& ShouldStopTicking) const;
 };

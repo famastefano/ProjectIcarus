@@ -24,13 +24,13 @@ UCLASS()
 class TESTS_API UIcarusTestSubsystem : public UEngineSubsystem
 {
 	GENERATED_BODY()
-	
+
 	TMap<FName, FTestWorldData> PrivateWorlds;
 
 	FTestWorldData SharedWorld;
 
 	static FTestWorldData MakeTestWorld(FName Name);
-	
+
 public:
 	virtual void Initialize(FSubsystemCollectionBase& Collection) override;
 	virtual void Deinitialize() override;

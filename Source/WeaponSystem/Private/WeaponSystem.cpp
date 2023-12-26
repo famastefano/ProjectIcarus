@@ -4,14 +4,12 @@
 
 void FWeaponSystemModule::StartupModule()
 {
-    
 }
 
 void FWeaponSystemModule::ShutdownModule()
 {
-    
 }
 
 #undef LOCTEXT_NAMESPACE
-    
+
 IMPLEMENT_MODULE(FWeaponSystemModule, WeaponSystem)

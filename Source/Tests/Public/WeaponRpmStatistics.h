@@ -37,7 +37,7 @@ class TESTS_API AWeaponRpmStatistics : public AActor
 	double LastHitTimestamp = 0;
 	double TerminationTimestamp = 0;
 
-	void DumpToCsv(FString const& Path) const;
+	void DumpToCsv(const FString& Path) const;
 
 public:
 	UPROPERTY(BlueprintAssignable)

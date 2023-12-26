@@ -139,7 +139,7 @@ public:
 
 	UFUNCTION(BlueprintCallable)
 	EBallisticWeaponStatus GetStatus() const;
-	
+
 	// Can be changed between firing.
 	UFUNCTION(BlueprintCallable, BlueprintSetter, Category="Firing")
 	void SetFireRate(int NewFireRateInRpm);
@@ -189,7 +189,7 @@ protected:
 
 	FTraceDelegate OnHitDelegate;
 
-	void OnHitScanCompleted(FTraceHandle const& TraceHandle, FTraceDatum& TraceDatum) const;
+	void OnHitScanCompleted(const FTraceHandle& TraceHandle, FTraceDatum& TraceDatum) const;
 
 public:
 	virtual void TickComponent(float DeltaTime, ELevelTick TickType,

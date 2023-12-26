@@ -19,7 +19,8 @@ FIcarusTestWorldHelper::FIcarusTestWorldHelper(UIcarusTestSubsystem* Subsystem,
 {
 }
 
-FIcarusTestWorldHelper::FIcarusTestWorldHelper(FIcarusTestWorldHelper&& Other) noexcept : Subsystem(Other.Subsystem), OldGFrameCounter(Other.OldGFrameCounter)
+FIcarusTestWorldHelper::FIcarusTestWorldHelper(FIcarusTestWorldHelper&& Other) noexcept : Subsystem(Other.Subsystem),
+	OldGFrameCounter(Other.OldGFrameCounter)
 {
 	World = std::exchange(Other.World, nullptr);
 	IsSharedWorld = std::exchange(Other.IsSharedWorld, false);
@@ -57,16 +58,18 @@ void FIcarusTestWorldHelper::Tick(float DeltaTime) const
 	GEngine->TickDeferredCommands();
 }
 
-void FIcarusTestWorldHelper::TickUntil(float DeltaTime, TUniqueFunction<bool()> const& ShouldStopTicking) const
+void FIcarusTestWorldHelper::TickUntil(float DeltaTime, const TUniqueFunction<bool()>& ShouldStopTicking) const
 {
 	check(ShouldStopTicking);
 
 	while (!ShouldStopTicking())
+	{
 		Tick(DeltaTime);
+	}
 }
 
-void FIcarusTestWorldHelper::TickWithVariableDeltaTimeUntil(TUniqueFunction<float(float)> const& CalculateNextDeltaTime,
-                                                            TUniqueFunction<bool()> const& ShouldStopTicking) const
+void FIcarusTestWorldHelper::TickWithVariableDeltaTimeUntil(const TUniqueFunction<float(float)>& CalculateNextDeltaTime,
+                                                            const TUniqueFunction<bool()>& ShouldStopTicking) const
 {
 	check(CalculateNextDeltaTime);
 	check(ShouldStopTicking);
