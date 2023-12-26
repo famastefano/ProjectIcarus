@@ -95,6 +95,10 @@ void UBallisticWeaponComponent::StartFiring()
 		{
 			OnStatusChanged.Broadcast(Status);
 		}
+		if (OnFiringStarted.IsBound())
+		{
+			OnFiringStarted.Broadcast();
+		}
 		Fire();
 	}
 }
@@ -115,13 +119,22 @@ void UBallisticWeaponComponent::StopFiring()
 		{
 			OnStatusChanged.Broadcast(Status);
 		}
+		if (OnFiringStopped.IsBound())
+		{
+			OnFiringStopped.Broadcast();
+		}
 	}
 }
 
 void UBallisticWeaponComponent::StartReloading()
 {
+	const EBallisticWeaponStatus PrevStatus = Status;
 	Status = EBallisticWeaponStatus::Reloading;
 	ReloadTimestamp = GetWorld()->TimeSeconds + SecondsToReload;
+	if (PrevStatus == EBallisticWeaponStatus::Firing && OnFiringStopped.IsBound())
+	{
+		OnFiringStopped.Broadcast();
+	}
 	if (OnReloadStarted.IsBound())
 	{
 		OnReloadStarted.Broadcast();
@@ -187,6 +200,10 @@ void UBallisticWeaponComponent::TickComponent(float DeltaTime, ELevelTick TickTy
 		else
 		{
 			Status = EBallisticWeaponStatus::WaitingReload;
+			if (OnFiringStopped.IsBound())
+			{
+				OnFiringStopped.Broadcast();
+			}
 			if (OnReloadRequested.IsBound())
 			{
 				OnReloadRequested.Broadcast();

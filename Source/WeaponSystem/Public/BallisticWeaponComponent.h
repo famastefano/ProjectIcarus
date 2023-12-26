@@ -34,6 +34,7 @@ DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FWeaponComponentNotifyStatusChangeSi
  * - Firing via hit-scan or by spawning a projectile
  * - Reloading with precise timing
  * - Event based notification through delegates:
+ *		- firing started/stopped
  *		- A shot has been fired, so ammunition have been updated
  *		- Reloading requested/started/completed
  *		- Status changed
@@ -128,6 +129,17 @@ public:
 	UPROPERTY(BlueprintAssignable)
 	FWeaponComponentBasicDelegateSignature OnReloadFailed;
 
+	UPROPERTY(BlueprintAssignable)
+	FWeaponComponentBasicDelegateSignature OnFiringStarted;
+
+	// Stopped firing.
+	// Possible reasons:
+	// - explicitly requested via StopFiring()
+	// - magazine depleted
+	// - burst firing sequence completed
+	UPROPERTY(BlueprintAssignable)
+	FWeaponComponentBasicDelegateSignature OnFiringStopped;
+
 	// Called each time the weapon fires.
 	UPROPERTY(BlueprintAssignable)
 	FWeaponComponentBasicDelegateSignature OnShotFired;
@@ -145,6 +157,7 @@ public:
 	void SetFireRate(int NewFireRateInRpm);
 
 	// Pulls the trigger once.
+	// Won't trigger Started/Stopped firing delegates.
 	UFUNCTION(BlueprintCallable)
 	void FireOnce();
 
