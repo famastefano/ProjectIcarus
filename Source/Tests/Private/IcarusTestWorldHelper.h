@@ -11,21 +11,20 @@ class TESTS_API FIcarusTestWorldHelper
 {
 	UIcarusTestSubsystem* Subsystem;
 	UWorld* World;
-	FName WorldName;
 	bool IsSharedWorld;
+	decltype(GFrameCounter) OldGFrameCounter;
 
 public:
 	explicit FIcarusTestWorldHelper() :
 		Subsystem(nullptr),
 		World(nullptr),
-		WorldName(NAME_None),
-		IsSharedWorld(false)
+		IsSharedWorld(false),
+		OldGFrameCounter(GFrameCounter)
 	{
 	}
 
 	explicit FIcarusTestWorldHelper(UIcarusTestSubsystem* Subsystem,
 	                                UWorld* World,
-	                                FName WorldName,
 	                                bool IsSharedWorld);
 
 	FIcarusTestWorldHelper(FIcarusTestWorldHelper const&) = delete;

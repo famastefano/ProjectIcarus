@@ -23,6 +23,7 @@ FTestWorldData UIcarusTestSubsystem::MakeTestWorld(FName Name)
 	World->UpdateWorldComponents(true, true);
 	World->AddToRoot();
 	World->SetFlags(RF_Public | RF_Standalone);
+	World->SetShouldTick(false);
 
 	UE_LOGFMT(LogIcarusTests, Log, "Test world {Name} created.", Name);
 
@@ -75,10 +76,10 @@ FIcarusTestWorldHelper UIcarusTestSubsystem::GetPrivateWorld(FName Name)
 {
 	check(IsInGameThread());
 	if (const FTestWorldData* Data = PrivateWorlds.Find(Name))
-		return FIcarusTestWorldHelper{this, Data->World, Name, false};
+		return FIcarusTestWorldHelper{this, Data->World, false};
 
 	auto const& [GameInstance, World] = PrivateWorlds.Add(Name, MakeTestWorld(Name));
-	return FIcarusTestWorldHelper{this, World, Name, false};
+	return FIcarusTestWorldHelper{this, World, false};
 }
 
 FIcarusTestWorldHelper UIcarusTestSubsystem::GetSharedWorld()
@@ -86,7 +87,7 @@ FIcarusTestWorldHelper UIcarusTestSubsystem::GetSharedWorld()
 	if (!SharedWorld.World)
 		SharedWorld = MakeTestWorld("IcarusTestSharedWorld");
 
-	FIcarusTestWorldHelper Helper{this, SharedWorld.World, "IcarusTestSharedWorld", true};
+	FIcarusTestWorldHelper Helper{this, SharedWorld.World, true};
 	return Helper;
 }
 

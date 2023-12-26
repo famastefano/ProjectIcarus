@@ -4,21 +4,24 @@
 #include "IcarusTestWorldHelper.h"
 
 #include "IcarusTestSubsystem.h"
+#include "LogIcarusTests.h"
+
+#include "Engine/CoreSettings.h"
 
 #include "HAL/ThreadManager.h"
 
+#include "Logging/StructuredLog.h"
+
 FIcarusTestWorldHelper::FIcarusTestWorldHelper(UIcarusTestSubsystem* Subsystem,
                                                UWorld* World,
-                                               FName WorldName,
                                                bool IsSharedWorld)
-	: Subsystem(Subsystem), World(World), WorldName(WorldName), IsSharedWorld(IsSharedWorld)
+	: Subsystem(Subsystem), World(World), IsSharedWorld(IsSharedWorld), OldGFrameCounter(GFrameCounter)
 {
 }
 
-FIcarusTestWorldHelper::FIcarusTestWorldHelper(FIcarusTestWorldHelper&& Other) noexcept : Subsystem(Other.Subsystem)
+FIcarusTestWorldHelper::FIcarusTestWorldHelper(FIcarusTestWorldHelper&& Other) noexcept : Subsystem(Other.Subsystem), OldGFrameCounter(Other.OldGFrameCounter)
 {
 	World = std::exchange(Other.World, nullptr);
-	WorldName = std::exchange(Other.WorldName, NAME_None);
 	IsSharedWorld = std::exchange(Other.IsSharedWorld, false);
 }
 
@@ -26,28 +29,36 @@ FIcarusTestWorldHelper& FIcarusTestWorldHelper::operator=(FIcarusTestWorldHelper
 {
 	World = std::exchange(Other.World, nullptr);
 	IsSharedWorld = std::exchange(Other.IsSharedWorld, false);
+	OldGFrameCounter = Other.OldGFrameCounter;
 	return *this;
 }
 
 FIcarusTestWorldHelper::~FIcarusTestWorldHelper()
 {
 	if (World && !IsSharedWorld)
-		Subsystem->DestroyPrivateWorld(WorldName);
+	{
+		GFrameCounter = OldGFrameCounter;
+		Subsystem->DestroyPrivateWorld(World->GetFName());
+	}
 }
 
 void FIcarusTestWorldHelper::Tick(float DeltaTime) const
 {
-	StaticTick(DeltaTime);
+	check(IsInGameThread());
+	check(World);
+	UE_LOGFMT(LogIcarusTests, Log, "Ticking {Name} by {Seconds} s.", World->GetFName(), DeltaTime);
+	StaticTick(DeltaTime, !!GAsyncLoadingUseFullTimeLimit, GAsyncLoadingTimeLimit / 1000.f);
 	World->Tick(LEVELTICK_All, DeltaTime);
+	FTickableGameObject::TickObjects(nullptr, LEVELTICK_All, false, DeltaTime);
+	GFrameCounter++;
 	FTaskGraphInterface::Get().ProcessThreadUntilIdle(ENamedThreads::GameThread);
-	FTSTicker::GetCoreTicker().Tick(FApp::GetDeltaTime());
 	FThreadManager::Get().Tick();
+	FTSTicker::GetCoreTicker().Tick(DeltaTime);
 	GEngine->TickDeferredCommands();
 }
 
 void FIcarusTestWorldHelper::TickUntil(float DeltaTime, TUniqueFunction<bool()> const& ShouldStopTicking) const
 {
-	check(World);
 	check(ShouldStopTicking);
 
 	while (!ShouldStopTicking())
@@ -57,7 +68,6 @@ void FIcarusTestWorldHelper::TickUntil(float DeltaTime, TUniqueFunction<bool()> 
 void FIcarusTestWorldHelper::TickWithVariableDeltaTimeUntil(TUniqueFunction<float(float)> const& CalculateNextDeltaTime,
                                                             TUniqueFunction<bool()> const& ShouldStopTicking) const
 {
-	check(World);
 	check(CalculateNextDeltaTime);
 	check(ShouldStopTicking);
 
