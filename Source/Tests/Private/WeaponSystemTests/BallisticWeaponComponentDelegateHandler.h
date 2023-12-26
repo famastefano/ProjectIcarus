@@ -20,6 +20,8 @@ public:
 	int OnReloadCanceledCounter = 0;
 	int OnReloadCompletedCounter = 0;
 	int OnReloadFailedCounter = 0;
+	int OnFiringStartedCounter = 0;
+	int OnFiringStoppedCounter = 0;
 	int OnShotFiredCounter = 0;
 
 	bool StatusUpdated = false;
@@ -38,6 +40,12 @@ public:
 
 	UFUNCTION()
 	void OnReloadFailed();
+
+	UFUNCTION()
+	void OnFiringStarted();
+
+	UFUNCTION()
+	void OnFiringStopped();
 
 	UFUNCTION()
 	void OnShotFired();
