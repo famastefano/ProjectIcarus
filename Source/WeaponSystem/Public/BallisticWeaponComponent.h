@@ -194,6 +194,7 @@ protected:
 	void Fire();
 	void UpdateMagazineAfterFiring();
 	void ReloadMagazine();
+	void NotifyStatusUpdate();
 
 	double LastFireTimestamp;
 	double SecondsBetweenEachShot;
@@ -201,6 +202,26 @@ protected:
 	int CurrentBurstFiringCount;
 
 	EBallisticWeaponStatus Status;
+
+	// TODO: Check type-punning safeness with MSVC. AFAIK it's safe-ish due to the compiler supporting C as well.
+	union
+	{
+		struct alignas(uint8) FNotifyQueueFlags
+		{
+			bool NotifyOnReloadRequested : 1;
+			bool NotifyOnReloadStarted : 1;
+			bool NotifyOnReloadCanceled : 1;
+			bool NotifyOnReloadCompleted : 1;
+			bool NotifyOnReloadFailed : 1;
+			bool NotifyOnFiringStarted : 1;
+			bool NotifyOnFiringStopped : 1;
+			bool NotifyOnShotFired : 1;
+		} Queue;
+
+		uint8 HasStatusChanged;
+
+		static_assert(sizeof(FNotifyQueueFlags) <= sizeof(HasStatusChanged));
+	} StatusNotificationQueue;
 
 	FTraceDelegate OnHitDelegate;
 

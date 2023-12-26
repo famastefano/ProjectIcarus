@@ -246,15 +246,17 @@ void FBallisticWeaponComponent_Spec::Define()
 			It("Should allow to fire again if enough time has passed", [this]
 			{
 				FComponentOptions Opt;
-				Opt.FireRateRpm = 600; // 10/s
+				Opt.FireRateRpm = 600;
 				Opt.HasInfiniteAmmo = true;
 				Opt.AmmoType.IsHitScan = true;
 				auto* Component = CreateAndAttachComponent(Opt);
+				const double WaitingTimeBetweenEachShot = Component->GetSecondsBetweenShots() + 0.1;
 				Component->FireOnce();
-				World.Tick(0.5);
+				World.Tick(WaitingTimeBetweenEachShot);
 				Component->FireOnce();
-				World.Tick(0.5);
+				World.Tick(WaitingTimeBetweenEachShot);
 				Component->FireOnce();
+				World.Tick();
 				TestTrueExpr(DelegateHandler->OnShotFiredCounter == 3);
 			});
 		});
