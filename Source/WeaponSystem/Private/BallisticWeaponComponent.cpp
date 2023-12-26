@@ -20,6 +20,7 @@ UBallisticWeaponComponent::UBallisticWeaponComponent()
 
 	PrimaryComponentTick.bCanEverTick = true;
 	PrimaryComponentTick.bStartWithTickEnabled = true;
+	PrimaryComponentTick.TickInterval = 0;
 
 #if WITH_EDITORONLY_DATA
 	BulletExitDirection = CreateEditorOnlyDefaultSubobject<UArrowComponent>(TEXT("Bullet_Exit_Direction"));
