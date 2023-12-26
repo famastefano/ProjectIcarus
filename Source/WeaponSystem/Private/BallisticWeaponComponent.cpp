@@ -212,7 +212,7 @@ void UBallisticWeaponComponent::ReloadMagazine()
 	if (ReloadingDiscardsEntireMagazine)
 		CurrentMagazine = 0;
 
-	checkf(MagazineSize >= CurrentMagazine, TEXT("Invalid precondition: MagazineSize >= CurrentMagazine (%d >= %d)"),
+	checkf(MagazineSize >= CurrentMagazine, TEXT("Precondition MagazineSize >= CurrentMagazine (%d >= %d) is false."),
 	       MagazineSize, CurrentMagazine);
 
 	if (LIKELY(!HasInfiniteAmmoReserve))
