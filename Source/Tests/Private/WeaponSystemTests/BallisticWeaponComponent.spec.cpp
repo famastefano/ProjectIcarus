@@ -398,6 +398,35 @@ void FBallisticWeaponComponent_Spec::Define()
 					World.Tick();
 					TestTrueExpr(Component->CurrentMagazine == 4 && Component->AmmoReserve == 0);
 				});
+
+			It("Should refill the magazine if ammo reserves are infinite", [this]
+			{
+				FComponentOptions Opt;
+				Opt.AmmoReserve = 0;
+				Opt.MagazineSize = 10;
+				Opt.CurrentMagazine = 5;
+				Opt.SecondsToReload = 0;
+				Opt.HasInfiniteAmmoReserve = true;
+				auto* Component = CreateAndAttachComponent(Opt);
+				Component->StartReloading();
+				World.Tick();
+				TestTrueExpr(Component->CurrentMagazine == 10);
+			});
+
+			It("Should refill the magazine if ammo reserves are infinite (while discarding the entire magazine)", [this]
+			{
+				FComponentOptions Opt;
+				Opt.AmmoReserve = 0;
+				Opt.MagazineSize = 10;
+				Opt.CurrentMagazine = 5;
+				Opt.SecondsToReload = 0;
+				Opt.HasInfiniteAmmoReserve = true;
+				Opt.ReloadingDiscardsEntireMagazine = true;
+				auto* Component = CreateAndAttachComponent(Opt);
+				Component->StartReloading();
+				World.Tick();
+				TestTrueExpr(Component->CurrentMagazine == 10);
+			});
 		});
 
 		AfterEach([this]
