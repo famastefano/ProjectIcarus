@@ -131,9 +131,11 @@ void AWeaponRpmStatistics::Tick(float)
 
 void AWeaponRpmStatistics::BeginPlay()
 {
+#if WITH_EDITOR
 	if (CsvName.IsEmpty())
 	{
 		CsvName = GetActorLabel();
 	}
+#endif
 	Super::BeginPlay();
 }

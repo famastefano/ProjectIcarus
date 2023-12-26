@@ -29,7 +29,9 @@ FTestWorldData UIcarusTestSubsystem::MakeTestWorld(FName Name)
 
 	GameInstance->InitForTest(*World);
 
+#if WITH_EDITOR
 	GEngine->BroadcastLevelActorListChanged();
+#endif
 
 	World->InitializeActorsForPlay(FURL());
 	auto* Settings = World->GetWorldSettings();
