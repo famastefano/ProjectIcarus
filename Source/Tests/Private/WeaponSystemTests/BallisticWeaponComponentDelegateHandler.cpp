@@ -51,6 +51,7 @@ void UBallisticWeaponComponentDelegateHandler::OnStatusChanged(EBallisticWeaponS
 
 void UBallisticWeaponComponentDelegateHandler::Register(UBallisticWeaponComponent* Component)
 {
+	Component->OnStatusChanged.AddDynamic(this, &UBallisticWeaponComponentDelegateHandler::OnStatusChanged);
 	Component->OnReloadRequested.AddDynamic(this, &UBallisticWeaponComponentDelegateHandler::OnReloadRequested);
 	Component->OnReloadStarted.AddDynamic(this, &UBallisticWeaponComponentDelegateHandler::OnReloadStarted);
 	Component->OnReloadCanceled.AddDynamic(this, &UBallisticWeaponComponentDelegateHandler::OnReloadCanceled);
@@ -63,6 +64,7 @@ void UBallisticWeaponComponentDelegateHandler::Register(UBallisticWeaponComponen
 
 void UBallisticWeaponComponentDelegateHandler::UnRegister(UBallisticWeaponComponent* Component)
 {
+	Component->OnStatusChanged.RemoveDynamic(this, &UBallisticWeaponComponentDelegateHandler::OnStatusChanged);
 	Component->OnReloadRequested.RemoveDynamic(this, &UBallisticWeaponComponentDelegateHandler::OnReloadRequested);
 	Component->OnReloadStarted.RemoveDynamic(this, &UBallisticWeaponComponentDelegateHandler::OnReloadStarted);
 	Component->OnReloadCanceled.RemoveDynamic(this, &UBallisticWeaponComponentDelegateHandler::OnReloadCanceled);
