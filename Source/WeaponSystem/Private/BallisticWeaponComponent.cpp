@@ -69,7 +69,11 @@ void UBallisticWeaponComponent::FireOnce()
 	if (Status == EBallisticWeaponStatus::Ready && HasEnoughAmmoToFire() && HasEnoughTimePassedFromLastShot())
 	{
 		if (IsBurstFire)
+		{
 			Status = EBallisticWeaponStatus::Firing;
+			if (OnStatusChanged.IsBound())
+				OnStatusChanged.Broadcast(Status);
+		}
 		Fire();
 	}
 }
@@ -79,6 +83,8 @@ void UBallisticWeaponComponent::StartFiring()
 	if (Status == EBallisticWeaponStatus::Ready && HasEnoughAmmoToFire() && HasEnoughTimePassedFromLastShot())
 	{
 		Status = EBallisticWeaponStatus::Firing;
+		if (OnStatusChanged.IsBound())
+			OnStatusChanged.Broadcast(Status);
 		Fire();
 	}
 }
@@ -88,11 +94,13 @@ void UBallisticWeaponComponent::StopFiring()
 	if (Status == EBallisticWeaponStatus::Firing)
 	{
 		Status = HasEnoughAmmoToFire() ? EBallisticWeaponStatus::Ready : EBallisticWeaponStatus::WaitingReload;
-		if(Status == EBallisticWeaponStatus::WaitingReload)
+		if (Status == EBallisticWeaponStatus::WaitingReload)
 		{
-			if(OnReloadRequested.IsBound())
+			if (OnReloadRequested.IsBound())
 				OnReloadRequested.Broadcast();
 		}
+		if (OnStatusChanged.IsBound())
+			OnStatusChanged.Broadcast(Status);
 	}
 }
 
@@ -102,6 +110,8 @@ void UBallisticWeaponComponent::StartReloading()
 	ReloadTimestamp = GetWorld()->TimeSeconds + SecondsToReload;
 	if (OnReloadStarted.IsBound())
 		OnReloadStarted.Broadcast();
+	if (OnStatusChanged.IsBound())
+		OnStatusChanged.Broadcast(Status);
 }
 
 void UBallisticWeaponComponent::CancelReloading()
@@ -111,8 +121,10 @@ void UBallisticWeaponComponent::CancelReloading()
 		Status = HasEnoughAmmoToFire() ? EBallisticWeaponStatus::Ready : EBallisticWeaponStatus::WaitingReload;
 		if (Status == EBallisticWeaponStatus::WaitingReload && OnReloadRequested.IsBound())
 			OnReloadRequested.Broadcast();
-		if(OnReloadCanceled.IsBound())
+		if (OnReloadCanceled.IsBound())
 			OnReloadCanceled.Broadcast();
+		if (OnStatusChanged.IsBound())
+			OnStatusChanged.Broadcast(Status);
 	}
 }
 
@@ -148,6 +160,8 @@ void UBallisticWeaponComponent::TickComponent(float DeltaTime, ELevelTick TickTy
 			Status = EBallisticWeaponStatus::WaitingReload;
 			if (OnReloadRequested.IsBound())
 				OnReloadRequested.Broadcast();
+			if (OnStatusChanged.IsBound())
+				OnStatusChanged.Broadcast(Status);
 		}
 	}
 	else if (Status == EBallisticWeaponStatus::Reloading && GetWorld()->TimeSeconds >= ReloadTimestamp)
@@ -210,6 +224,8 @@ void UBallisticWeaponComponent::Fire()
 			Status = EBallisticWeaponStatus::WaitingReload;
 			if (OnReloadRequested.IsBound())
 				OnReloadRequested.Broadcast();
+			if (OnStatusChanged.IsBound())
+				OnStatusChanged.Broadcast(Status);
 		}
 	}
 }
