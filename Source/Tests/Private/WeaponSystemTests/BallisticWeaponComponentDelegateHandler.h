@@ -13,12 +13,13 @@ class TESTS_API UBallisticWeaponComponentDelegateHandler : public UObject
 	GENERATED_BODY()
 
 	EBallisticWeaponStatus Status{};
-	
+
 public:
 	int OnReloadRequestedCounter = 0;
 	int OnReloadStartedCounter = 0;
 	int OnReloadCanceledCounter = 0;
 	int OnReloadCompletedCounter = 0;
+	int OnReloadFailedCounter = 0;
 	int OnShotFiredCounter = 0;
 
 	bool StatusUpdated = false;
@@ -34,6 +35,9 @@ public:
 
 	UFUNCTION()
 	void OnReloadCompleted();
+
+	UFUNCTION()
+	void OnReloadFailed();
 
 	UFUNCTION()
 	void OnShotFired();

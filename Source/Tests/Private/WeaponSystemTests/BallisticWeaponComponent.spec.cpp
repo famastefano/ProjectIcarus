@@ -1,4 +1,8 @@
 ﻿#ifdef ICARUS_BUILD_TESTS
+#include "IcarusTestActor.h"
+#include "LogIcarusTests.h"
+
+#include "Logging/StructuredLog.h"
 
 #include "BallisticWeaponComponentDelegateHandler.h"
 #include "BallisticWeaponComponent.h"
@@ -12,7 +16,7 @@ BEGIN_DEFINE_SPEC(FBallisticWeaponComponent_Spec, "Icarus.WeaponSystem.Ballistic
 	TObjectPtr<UIcarusTestSubsystem> Subsystem;
 	FIcarusTestWorldHelper World;
 	TObjectPtr<UBallisticWeaponComponentDelegateHandler> DelegateHandler;
-	TObjectPtr<AActor> Actor;
+	TObjectPtr<AIcarusTestActor> Actor;
 	TObjectPtr<UBallisticWeaponComponent> PrevComponent;
 
 	struct FComponentOptions
@@ -87,13 +91,14 @@ void FBallisticWeaponComponent_Spec::Define()
 	{
 		BeforeEach([this]
 		{
+			UE_LOGFMT(LogIcarusTests, Log, "Test {Name} started.", GetTestFullName());
 			if (!Subsystem)
 				Subsystem = GEngine->GetEngineSubsystem<UIcarusTestSubsystem>();
 			World = Subsystem->GetSharedWorld();
 			if (!DelegateHandler)
 				DelegateHandler = NewObject<UBallisticWeaponComponentDelegateHandler>();
 
-			Actor = World->SpawnActor<AActor>();
+			Actor = World->SpawnActor<AIcarusTestActor>();
 		});
 
 		Describe("When constructed", [this]
@@ -240,7 +245,7 @@ void FBallisticWeaponComponent_Spec::Define()
 				Opt.FireRateRpm = 600; // 10/s
 				Opt.HasInfiniteAmmo = true;
 				Opt.AmmoType.IsHitScan = true;
-				auto * Component = CreateAndAttachComponent(Opt);
+				auto* Component = CreateAndAttachComponent(Opt);
 				Component->FireOnce();
 				World.Tick(0.5);
 				Component->FireOnce();
@@ -248,6 +253,94 @@ void FBallisticWeaponComponent_Spec::Define()
 				Component->FireOnce();
 				TestTrueExpr(DelegateHandler->OnShotFiredCounter == 3);
 			});
+		});
+
+		Describe("When reloading", [this]
+		{
+			It("Should notify Start and Completion", [this]
+			{
+				FComponentOptions Opt;
+				Opt.AmmoReserve = 1;
+				Opt.MagazineSize = 1;
+				Opt.CurrentMagazine = 0;
+				Opt.SecondsToReload = 0;
+				auto* Component = CreateAndAttachComponent(Opt);
+				Component->StartReloading();
+				World.Tick();
+				TestTrueExpr(DelegateHandler->OnReloadStartedCounter == 1
+					&& DelegateHandler->OnReloadCompletedCounter == 1);
+			});
+
+			It("Should do so after a single Tick, if the reloading time is zero seconds", [this]
+			{
+				FComponentOptions Opt;
+				Opt.AmmoReserve = 10;
+				Opt.MagazineSize = 1;
+				Opt.CurrentMagazine = 0;
+				Opt.SecondsToReload = 0;
+				auto* Component = CreateAndAttachComponent(Opt);
+				Component->StartReloading();
+				World.Tick(0.001);
+				TestTrueExpr(Component->CurrentMagazine == Component->MagazineSize);
+			});
+
+			It("Should do so after the specified amount of time", [this]
+			{
+				FComponentOptions Opt;
+				Opt.AmmoReserve = 10;
+				Opt.MagazineSize = 1;
+				Opt.CurrentMagazine = 0;
+				Opt.SecondsToReload = 2;
+				auto* Component = CreateAndAttachComponent(Opt);
+				Component->StartReloading();
+				World.Tick(0.5);
+				World.Tick(0.5);
+				World.Tick(0.5);
+				World.Tick(0.5);
+				World.Tick(0.5);
+				TestTrueExpr(DelegateHandler->OnReloadStartedCounter == 1
+					&& DelegateHandler->OnReloadCompletedCounter == 1);
+			});
+
+			It("Should allow to cancel the reload immediately", [this]
+			{
+				FComponentOptions Opt;
+				Opt.AmmoReserve = 10;
+				Opt.MagazineSize = 1;
+				Opt.CurrentMagazine = 0;
+				Opt.SecondsToReload = 0;
+				auto* Component = CreateAndAttachComponent(Opt);
+				Component->StartReloading();
+				Component->CancelReloading();
+				World.Tick(0.001);
+				TestTrueExpr(Component->CurrentMagazine == 0
+					&& DelegateHandler->OnReloadStartedCounter == 1
+					&& DelegateHandler->OnReloadCanceledCounter == 1
+					&& DelegateHandler->OnReloadCompletedCounter == 0);
+			});
+
+			It("Should allow to cancel the reload if it hasnt completed it", [this]
+			{
+				FComponentOptions Opt;
+				Opt.AmmoReserve = 10;
+				Opt.MagazineSize = 1;
+				Opt.CurrentMagazine = 0;
+				Opt.SecondsToReload = 1;
+				auto* Component = CreateAndAttachComponent(Opt);
+				Component->StartReloading();
+				World.Tick(0.5);
+				Component->CancelReloading();
+				World.Tick(1);
+				TestTrueExpr(Component->CurrentMagazine == 0
+					&& DelegateHandler->OnReloadStartedCounter == 1
+					&& DelegateHandler->OnReloadCanceledCounter == 1
+					&& DelegateHandler->OnReloadCompletedCounter == 0);
+			});
+
+			// Fails due to not enough ammo reserve
+			// Updates ammo reserve with -(Magazine-CurrentMagazine)
+			// Updates ammo reserve with -Magazine (discards entire mag)
+			// Updates ammo reserve with CurrentMagazine = AmmoReserve (reserve < mag diff)
 		});
 	});
 
@@ -259,6 +352,7 @@ void FBallisticWeaponComponent_Spec::Define()
 		Actor->Destroy();
 		Actor = nullptr;
 		PrevComponent = nullptr;
+		UE_LOGFMT(LogIcarusTests, Log, "Test ended.");
 	});
 }
 
