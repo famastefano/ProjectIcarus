@@ -429,6 +429,85 @@ void FBallisticWeaponComponent_Spec::Define()
 			});
 		});
 
+		Describe("When firing continuously", [this]
+		{
+			Describe("In burst fire mode", [this]
+			{
+				It("Should shoot all the rounds, if it has enough ammo", [this]
+				{
+					FComponentOptions Opt;
+					Opt.AmmoType.IsHitScan = true;
+					Opt.IsBurstFire = true;
+					Opt.ShotsFiredDuringBurstFire = 3;
+					Opt.CurrentMagazine = 5;
+					Opt.FireRateRpm = 600;
+					auto* Component = CreateAndAttachComponent(Opt);
+					const double DeltaTimeRequiredToShoot = Component->GetSecondsBetweenShots() + 0.1;
+					Component->StartFiring();
+					World.Tick(DeltaTimeRequiredToShoot);
+					World.Tick(DeltaTimeRequiredToShoot);
+					TestTrueExpr(Component->CurrentMagazine == 2 && DelegateHandler->OnShotFiredCounter == 3);
+				});
+
+				It("Should ask to reload if the magazine is depleted (shoots all burst fire rounds)", [this]
+				{
+					FComponentOptions Opt;
+					Opt.AmmoType.IsHitScan = true;
+					Opt.IsBurstFire = true;
+					Opt.ShotsFiredDuringBurstFire = 2;
+					Opt.CurrentMagazine = 2;
+					Opt.FireRateRpm = 600;
+					auto* Component = CreateAndAttachComponent(Opt);
+					const double DeltaTimeRequiredToShoot = Component->GetSecondsBetweenShots() + 0.1;
+					Component->StartFiring();
+					World.Tick(DeltaTimeRequiredToShoot);
+					TestTrueExpr(Component->CurrentMagazine == 0
+						&& DelegateHandler->OnShotFiredCounter == 2
+						&& DelegateHandler->OnReloadRequestedCounter == 1
+					);
+				});
+
+				It("Should ask to reload if the magazine is depleted (interrupts burst firing)", [this]
+				{
+					FComponentOptions Opt;
+					Opt.AmmoType.IsHitScan = true;
+					Opt.IsBurstFire = true;
+					Opt.ShotsFiredDuringBurstFire = 10;
+					Opt.CurrentMagazine = 8;
+					Opt.FireRateRpm = 600;
+					auto* Component = CreateAndAttachComponent(Opt);
+					const double DeltaTimeRequiredToShoot = Component->GetSecondsBetweenShots() + 0.1;
+					Component->StartFiring();
+					World.TickUntil(DeltaTimeRequiredToShoot, [RoundsToShoot = Opt.CurrentMagazine]() mutable
+					{
+						return --RoundsToShoot == 0;
+					});
+					TestTrueExpr(Component->CurrentMagazine == 0
+						&& DelegateHandler->OnShotFiredCounter == 8
+						&& DelegateHandler->OnReloadRequestedCounter == 1
+					);
+				});
+
+				It("Should interrupt burst fire if requested", [this]
+				{
+					FComponentOptions Opt;
+					Opt.AmmoType.IsHitScan = true;
+					Opt.IsBurstFire = true;
+					Opt.ShotsFiredDuringBurstFire = 10;
+					Opt.CurrentMagazine = 8;
+					Opt.FireRateRpm = 600;
+					auto* Component = CreateAndAttachComponent(Opt);
+					const double DeltaTimeRequiredToShoot = Component->GetSecondsBetweenShots() + 0.1;
+					Component->StartFiring();
+					World.Tick(DeltaTimeRequiredToShoot);
+					World.Tick(DeltaTimeRequiredToShoot);
+					Component->StopFiring();
+					World.Tick(DeltaTimeRequiredToShoot);
+					TestTrueExpr(Component->CurrentMagazine == 5 && DelegateHandler->OnShotFiredCounter == 3);
+				});
+			});
+		});
+
 		AfterEach([this]
 		{
 			if (PrevComponent)
