@@ -89,13 +89,10 @@ void UBallisticWeaponComponent::StopFiring()
 
 void UBallisticWeaponComponent::StartReloading()
 {
-	if (Status != EBallisticWeaponStatus::WaitingReload)
-	{
-		Status = EBallisticWeaponStatus::WaitingReload;
-		ReloadTimestamp = GetWorld()->TimeSeconds + SecondsToReload;
-		if (OnReloadStarted.IsBound())
-			OnReloadStarted.Broadcast();
-	}
+	Status = EBallisticWeaponStatus::Reloading;
+	ReloadTimestamp = GetWorld()->TimeSeconds + SecondsToReload;
+	if (OnReloadStarted.IsBound())
+		OnReloadStarted.Broadcast();
 }
 
 void UBallisticWeaponComponent::CancelReloading()
@@ -105,6 +102,8 @@ void UBallisticWeaponComponent::CancelReloading()
 		Status = HasEnoughAmmoToFire() ? EBallisticWeaponStatus::Ready : EBallisticWeaponStatus::WaitingReload;
 		if (Status == EBallisticWeaponStatus::WaitingReload && OnReloadRequested.IsBound())
 			OnReloadRequested.Broadcast();
+		if(OnReloadCanceled.IsBound())
+			OnReloadCanceled.Broadcast();
 	}
 }
 
@@ -144,8 +143,6 @@ void UBallisticWeaponComponent::TickComponent(float DeltaTime, ELevelTick TickTy
 	else if (Status == EBallisticWeaponStatus::Reloading && GetWorld()->TimeSeconds >= ReloadTimestamp)
 	{
 		ReloadMagazine();
-		if (OnReloadCompleted.IsBound())
-			OnReloadCompleted.Broadcast();
 	}
 }
 
@@ -219,12 +216,24 @@ void UBallisticWeaponComponent::ReloadMagazine()
 	{
 		int16 const MissingRounds = MagazineSize - CurrentMagazine;
 		int16 const RoundsAvailable = AmmoReserve >= MissingRounds ? MissingRounds : AmmoReserve;
-		CurrentMagazine += RoundsAvailable;
-		AmmoReserve -= RoundsAvailable;
+		if (RoundsAvailable > 0)
+		{
+			CurrentMagazine += RoundsAvailable;
+			AmmoReserve -= RoundsAvailable;
+			if (OnReloadCompleted.IsBound())
+				OnReloadCompleted.Broadcast();
+		}
+		else
+		{
+			if (OnReloadFailed.IsBound())
+				OnReloadFailed.Broadcast();
+		}
 	}
 	else
 	{
 		CurrentMagazine = MagazineSize;
+		if (OnReloadCompleted.IsBound())
+			OnReloadCompleted.Broadcast();
 	}
 }
 

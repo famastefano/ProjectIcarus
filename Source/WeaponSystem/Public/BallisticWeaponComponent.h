@@ -124,6 +124,10 @@ public:
 	UPROPERTY(BlueprintAssignable)
 	FWeaponComponentBasicDelegateSignature OnReloadCompleted;
 
+	// Couldn't reload.
+	UPROPERTY(BlueprintAssignable)
+	FWeaponComponentBasicDelegateSignature OnReloadFailed;
+
 	// Called each time the weapon fires.
 	UPROPERTY(BlueprintAssignable)
 	FWeaponComponentBasicDelegateSignature OnShotFired;
