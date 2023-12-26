@@ -86,7 +86,14 @@ void UBallisticWeaponComponent::StartFiring()
 void UBallisticWeaponComponent::StopFiring()
 {
 	if (Status == EBallisticWeaponStatus::Firing)
-		Status = CurrentMagazine > 0 ? EBallisticWeaponStatus::Ready : EBallisticWeaponStatus::WaitingReload;
+	{
+		Status = HasEnoughAmmoToFire() ? EBallisticWeaponStatus::Ready : EBallisticWeaponStatus::WaitingReload;
+		if(Status == EBallisticWeaponStatus::WaitingReload)
+		{
+			if(OnReloadRequested.IsBound())
+				OnReloadRequested.Broadcast();
+		}
+	}
 }
 
 void UBallisticWeaponComponent::StartReloading()
