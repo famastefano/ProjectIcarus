@@ -300,6 +300,11 @@ void UBallisticWeaponComponent::Fire()
 			}
 		}
 	}
+
+	if (Status != EBallisticWeaponStatus::Firing && OnFiringStopped.IsBound())
+	{
+		OnFiringStopped.Broadcast();
+	}
 }
 
 void UBallisticWeaponComponent::ReloadMagazine()

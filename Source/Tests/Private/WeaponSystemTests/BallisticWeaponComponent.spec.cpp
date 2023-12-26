@@ -505,6 +505,29 @@ void FBallisticWeaponComponent_Spec::Define()
 					World.Tick(DeltaTimeRequiredToShoot);
 					TestTrueExpr(Component->CurrentMagazine == 5 && DelegateHandler->OnShotFiredCounter == 3);
 				});
+
+				It("Should start a new burst firing sequence each time we start firing", [this]
+				{
+					FComponentOptions Opt;
+					Opt.AmmoType.IsHitScan = true;
+					Opt.IsBurstFire = true;
+					Opt.ShotsFiredDuringBurstFire = 2;
+					Opt.CurrentMagazine = 8;
+					Opt.FireRateRpm = 600;
+					auto* Component = CreateAndAttachComponent(Opt);
+					const double DeltaTimeRequiredToShoot = Component->GetSecondsBetweenShots() + 0.1;
+					for (int i = 0; i < Opt.CurrentMagazine / Opt.ShotsFiredDuringBurstFire; ++i)
+					{
+						Component->StartFiring();
+						World.Tick(DeltaTimeRequiredToShoot);
+						World.Tick(DeltaTimeRequiredToShoot);
+					}
+					TestTrueExpr(Component->CurrentMagazine == 0
+						&& DelegateHandler->OnShotFiredCounter == 8
+						&& DelegateHandler->OnFiringStartedCounter == 4
+						&& DelegateHandler->OnFiringStoppedCounter == 4
+						&& DelegateHandler->OnReloadRequestedCounter == 1);
+				});
 			});
 		});
 
