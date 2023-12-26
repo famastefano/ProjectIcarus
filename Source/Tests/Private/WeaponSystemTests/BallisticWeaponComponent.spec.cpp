@@ -337,10 +337,61 @@ void FBallisticWeaponComponent_Spec::Define()
 					&& DelegateHandler->OnReloadCompletedCounter == 0);
 			});
 
-			// Fails due to not enough ammo reserve
-			// Updates ammo reserve with -(Magazine-CurrentMagazine)
-			// Updates ammo reserve with -Magazine (discards entire mag)
-			// Updates ammo reserve with CurrentMagazine = AmmoReserve (reserve < mag diff)
+			It("Should fail if there isnt enough ammo in the reserve", [this]
+			{
+				FComponentOptions Opt;
+				Opt.AmmoReserve = 0;
+				Opt.MagazineSize = 1;
+				Opt.CurrentMagazine = 0;
+				Opt.SecondsToReload = 0;
+				auto* Component = CreateAndAttachComponent(Opt);
+				Component->StartReloading();
+				World.Tick();
+				TestTrueExpr(Component->CurrentMagazine == 0
+					&& DelegateHandler->OnReloadStartedCounter == 1
+					&& DelegateHandler->OnReloadFailedCounter == 1
+					&& DelegateHandler->OnReloadCompletedCounter == 0);
+			});
+
+			It("Should decrease the ammo reserve with just enough ammo to fill the magazine", [this]
+			{
+				FComponentOptions Opt;
+				Opt.AmmoReserve = 10;
+				Opt.MagazineSize = 5;
+				Opt.CurrentMagazine = 3;
+				Opt.SecondsToReload = 0;
+				auto* Component = CreateAndAttachComponent(Opt);
+				Component->StartReloading();
+				World.Tick();
+				TestTrueExpr(Component->CurrentMagazine == 5 && Component->AmmoReserve == 8);
+			});
+
+			It("Should decrease the ammo reserve to fill the entire magazine, if asked", [this]
+			{
+				FComponentOptions Opt;
+				Opt.AmmoReserve = 10;
+				Opt.MagazineSize = 5;
+				Opt.CurrentMagazine = 3;
+				Opt.SecondsToReload = 0;
+				Opt.ReloadingDiscardsEntireMagazine = true;
+				auto* Component = CreateAndAttachComponent(Opt);
+				Component->StartReloading();
+				World.Tick();
+				TestTrueExpr(Component->CurrentMagazine == 5 && Component->AmmoReserve == 5);
+			});
+
+			It("Should fill the magazine with all the ammo reserve, if the reserve has less ammo than the amount required to fill the mag", [this]
+			{
+				FComponentOptions Opt;
+				Opt.AmmoReserve = 1;
+				Opt.MagazineSize = 5;
+				Opt.CurrentMagazine = 3;
+				Opt.SecondsToReload = 0;
+				auto* Component = CreateAndAttachComponent(Opt);
+				Component->StartReloading();
+				World.Tick();
+				TestTrueExpr(Component->CurrentMagazine == 4 && Component->AmmoReserve == 0);
+			});
 		});
 	});
 
