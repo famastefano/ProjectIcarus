@@ -223,10 +223,6 @@ protected:
 		static_assert(sizeof(FNotifyQueueFlags) <= sizeof(HasStatusChanged));
 	} StatusNotificationQueue;
 
-	FTraceDelegate OnHitDelegate;
-
-	void OnHitScanCompleted(const FTraceHandle& TraceHandle, FTraceDatum& TraceDatum) const;
-
 public:
 	virtual void TickComponent(float DeltaTime, ELevelTick TickType,
 	                           FActorComponentTickFunction* ThisTickFunction) override;

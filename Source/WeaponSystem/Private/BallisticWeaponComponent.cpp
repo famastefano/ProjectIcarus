@@ -45,7 +45,6 @@ void UBallisticWeaponComponent::BeginPlay()
 	LastFireTimestamp = -SecondsBetweenEachShot;
 	Status = HasEnoughAmmoToFire() ? EBallisticWeaponStatus::Ready : EBallisticWeaponStatus::WaitingReload;
 	StatusNotificationQueue.HasStatusChanged = 0;
-	OnHitDelegate.BindUObject(this, &UBallisticWeaponComponent::OnHitScanCompleted);
 	Super::BeginPlay();
 }
 
@@ -196,14 +195,26 @@ void UBallisticWeaponComponent::Fire()
 		              FColor::Red, false, 1.f, 0, 0.5f);
 #endif
 
-		World->AsyncLineTraceByChannel(
-			EAsyncTraceType::Single,
+		// Async line trace is too imprecise, so we've chosen to use the sync one that yields very close results to expected RPMs
+		FHitResult HitResult;
+		if (World->LineTraceSingleByChannel(
+			HitResult,
 			MuzzleLocation,
 			MuzzleLocation + MuzzleDirection * MaximumDistance,
-			AmmoType.CollisionChannel,
-			FCollisionQueryParams::DefaultQueryParam,
-			FCollisionResponseParams::DefaultResponseParam,
-			&OnHitDelegate);
+			AmmoType.CollisionChannel))
+		{
+			UE_LOGFMT(LogWeaponSystem, Verbose, "Hit {Actor}, {Distance} cm far",
+			          HitResult.GetActor()->GetName(),
+			          HitResult.Distance);
+
+			if (AActor* ActorHit = HitResult.GetActor(); ActorHit && ActorHit->CanBeDamaged())
+			{
+				// TODO: Calculate damage falloff based on distance
+				AActor* Owner = GetOwner();
+				const FDamageEvent DamageEvent{AmmoType.DamageType};
+				ActorHit->TakeDamage(AmmoType.DamageAmount, DamageEvent, Owner->GetInstigatorController(), Owner);
+			}
+		}
 	}
 	else
 	{
@@ -329,23 +340,4 @@ void UBallisticWeaponComponent::NotifyStatusUpdate()
 	}
 
 	StatusNotificationQueue.HasStatusChanged = 0;
-}
-
-void UBallisticWeaponComponent::OnHitScanCompleted(const FTraceHandle& TraceHandle, FTraceDatum& TraceDatum) const
-{
-	if (!TraceDatum.OutHits.IsEmpty())
-	{
-		const FHitResult& HitResult = TraceDatum.OutHits[0];
-
-		UE_LOGFMT(LogWeaponSystem, Verbose, "Hit {Actor}, {Distance} cm far", *HitResult.GetActor()->GetName(),
-		          HitResult.Distance);
-
-		if (AActor* ActorHit = HitResult.GetActor(); ActorHit && ActorHit->CanBeDamaged())
-		{
-			// TODO: Calculate damage falloff based on distance
-			AActor* Owner = GetOwner();
-			const FDamageEvent DamageEvent{AmmoType.DamageType};
-			ActorHit->TakeDamage(AmmoType.DamageAmount, DamageEvent, Owner->GetInstigatorController(), Owner);
-		}
-	}
 }
