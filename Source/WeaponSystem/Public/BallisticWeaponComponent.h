@@ -208,14 +208,14 @@ protected:
 	{
 		struct alignas(uint8) FNotifyQueueFlags
 		{
-			bool NotifyOnReloadRequested : 1;
-			bool NotifyOnReloadStarted : 1;
-			bool NotifyOnReloadCanceled : 1;
-			bool NotifyOnReloadCompleted : 1;
-			bool NotifyOnReloadFailed : 1;
-			bool NotifyOnFiringStarted : 1;
-			bool NotifyOnFiringStopped : 1;
-			bool NotifyOnShotFired : 1;
+			uint8 NotifyOnReloadRequested : 1;
+			uint8 NotifyOnReloadStarted : 1;
+			uint8 NotifyOnReloadCanceled : 1;
+			uint8 NotifyOnReloadCompleted : 1;
+			uint8 NotifyOnReloadFailed : 1;
+			uint8 NotifyOnFiringStarted : 1;
+			uint8 NotifyOnFiringStopped : 1;
+			uint8 NotifyOnShotFired : 1;
 		} Queue;
 
 		uint8 HasStatusChanged;
