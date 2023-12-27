@@ -78,6 +78,7 @@ void UBallisticWeaponComponent::FireOnce()
 		}
 		Fire();
 		UpdateMagazineAfterFiring();
+		NotifyStatusUpdate();
 	}
 }
 
@@ -93,6 +94,7 @@ void UBallisticWeaponComponent::StartFiring()
 		}
 		Fire();
 		UpdateMagazineAfterFiring();
+		NotifyStatusUpdate();
 	}
 }
 
@@ -103,6 +105,7 @@ void UBallisticWeaponComponent::StopFiring()
 		Status = HasEnoughAmmoToFire() ? EBallisticWeaponStatus::Ready : EBallisticWeaponStatus::WaitingReload;
 		StatusNotificationQueue.Queue.NotifyOnFiringStopped = true;
 		StatusNotificationQueue.Queue.NotifyOnReloadRequested = Status == EBallisticWeaponStatus::WaitingReload;
+		NotifyStatusUpdate();
 	}
 }
 
@@ -143,8 +146,6 @@ void UBallisticWeaponComponent::TickComponent(float DeltaTime, ELevelTick TickTy
                                               FActorComponentTickFunction* ThisTickFunction)
 {
 	UE_LOGFMT(LogWeaponSystem, Log, "UBallisticWeaponComponent::TickComponent: {DeltaTime} s.", DeltaTime);
-
-	NotifyStatusUpdate();
 
 	if (Status == EBallisticWeaponStatus::Firing)
 	{
