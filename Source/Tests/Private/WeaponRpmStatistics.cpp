@@ -107,7 +107,7 @@ void AWeaponRpmStatistics::Tick(float)
 		Status = EStatus::Terminated;
 		Snapshots.Add({Now - InitialTimestamp, TotalHits});
 
-		const FString DirTree = FPaths::Combine(FPaths::ProjectDir(),TEXT("csv"));
+		const FString DirTree = FPaths::Combine(FPaths::ProjectDir(),TEXT("Csv"));
 		if (FPlatformFileManager::Get().GetPlatformFile().CreateDirectoryTree(*DirTree))
 		{
 			const FString FileName = "WeaponRpmStatistics_" + CsvName + "_%Y%m%d_%H%M%S.csv";
