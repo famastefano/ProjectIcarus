@@ -40,7 +40,7 @@ UBallisticWeaponComponent::UBallisticWeaponComponent()
 
 void UBallisticWeaponComponent::BeginPlay()
 {
-	UE_LOGFMT(LogWeaponSystem, Log, "UBallisticWeaponComponent `{Name}` BeginPlay.", GetFName());
+	UE_LOGFMT(LogWeaponSystem, Verbose, "UBallisticWeaponComponent `{Name}` BeginPlay.", GetFName());
 	SecondsBetweenEachShot = GetSecondsBetweenShots();
 	LastFireTimestamp = -SecondsBetweenEachShot;
 	Status = HasEnoughAmmoToFire() ? EBallisticWeaponStatus::Ready : EBallisticWeaponStatus::WaitingReload;
@@ -145,7 +145,7 @@ bool UBallisticWeaponComponent::HasEnoughTimePassedFromLastShot() const
 void UBallisticWeaponComponent::TickComponent(float DeltaTime, ELevelTick TickType,
                                               FActorComponentTickFunction* ThisTickFunction)
 {
-	UE_LOGFMT(LogWeaponSystem, Log, "UBallisticWeaponComponent::TickComponent: {DeltaTime} s.", DeltaTime);
+	UE_LOGFMT(LogWeaponSystem, VeryVerbose, "UBallisticWeaponComponent::TickComponent: {DeltaTime} s.", DeltaTime);
 
 	if (Status == EBallisticWeaponStatus::Firing)
 	{
