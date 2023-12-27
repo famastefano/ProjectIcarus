@@ -164,6 +164,7 @@ void UBallisticWeaponComponent::TickComponent(float DeltaTime, ELevelTick TickTy
 		{
 			Status = EBallisticWeaponStatus::WaitingReload;
 			StatusNotificationQueue.Queue.NotifyOnReloadRequested = true;
+			StatusNotificationQueue.Queue.NotifyOnFiringStopped = Status == EBallisticWeaponStatus::Firing;
 		}
 	}
 	else if (Status == EBallisticWeaponStatus::Reloading && GetWorld()->TimeSeconds >= ReloadTimestamp)
@@ -243,6 +244,7 @@ void UBallisticWeaponComponent::UpdateMagazineAfterFiring()
 #endif
 		if (CurrentMagazine <= 0 && Status != EBallisticWeaponStatus::WaitingReload)
 		{
+			StatusNotificationQueue.Queue.NotifyOnFiringStopped = Status == EBallisticWeaponStatus::Firing;
 			Status = EBallisticWeaponStatus::WaitingReload;
 			StatusNotificationQueue.Queue.NotifyOnReloadRequested = true;
 		}

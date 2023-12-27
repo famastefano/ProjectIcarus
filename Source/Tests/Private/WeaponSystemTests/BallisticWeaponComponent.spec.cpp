@@ -531,6 +531,54 @@ void FBallisticWeaponComponent_Spec::Define()
 						&& DelegateHandler->OnReloadRequestedCounter == 1);
 				});
 			});
+
+			Describe("In automatic mode", [this]
+			{
+				It("Wont start if the magazine is empty", [this]
+				{
+					FComponentOptions Opt;
+					Opt.CurrentMagazine = 0;
+					Opt.AmmoUsedEachShot = 1;
+					auto* Component = CreateAndAttachComponent(Opt);
+					Component->StartFiring();
+					World.Tick();
+					TestTrueExpr(DelegateHandler->OnFiringStartedCounter == 0
+						&& DelegateHandler->OnShotFiredCounter == 0);
+				});
+
+				It("Wont start if the magazine has less rounds than the required ones to shot", [this]
+				{
+					FComponentOptions Opt;
+					Opt.CurrentMagazine = 5;
+					Opt.AmmoUsedEachShot = Opt.CurrentMagazine + 1;
+					auto* Component = CreateAndAttachComponent(Opt);
+					Component->StartFiring();
+					World.Tick();
+					TestTrueExpr(DelegateHandler->OnFiringStartedCounter == 0
+						&& DelegateHandler->OnShotFiredCounter == 0);
+				});
+
+				It("Will shoot until the magazine is empty", [this]
+				{
+					FComponentOptions Opt;
+					Opt.CurrentMagazine = 5;
+					Opt.AmmoUsedEachShot = 1;
+					Opt.AmmoType.IsHitScan = true;
+					Opt.FireRateRpm = 600;
+					auto* Component = CreateAndAttachComponent(Opt);
+					double TimeToShoot = Component->GetSecondsBetweenShots() + 0.1;
+					Component->StartFiring();
+					World.Tick(TimeToShoot);
+					World.Tick(TimeToShoot);
+					World.Tick(TimeToShoot);
+					World.Tick(TimeToShoot);
+					TestTrueExpr(Component->CurrentMagazine == 0
+						&& DelegateHandler->OnShotFiredCounter == 5
+						&& DelegateHandler->OnFiringStartedCounter == 1
+						&& DelegateHandler->OnFiringStoppedCounter == 1
+						&& DelegateHandler->OnReloadRequestedCounter == 1);
+				});
+			});
 		});
 
 		AfterEach([this]
