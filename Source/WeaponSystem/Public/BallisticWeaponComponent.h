@@ -102,7 +102,7 @@ public:
 	float SecondsToReload = 0;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Weapon")
-	FAmmoType AmmoType;
+	FAmmoType AmmoType; // TODO: Handle penetration in hit-scan?
 
 #pragma endregion
 
