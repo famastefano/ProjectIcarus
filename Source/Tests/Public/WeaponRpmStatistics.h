@@ -19,6 +19,8 @@ struct FRpmSnapshot
 
 	double Timestamp;
 	int Hits;
+	double FireRate;
+	double Error;
 };
 
 UCLASS()
@@ -36,6 +38,7 @@ class TESTS_API AWeaponRpmStatistics : public AActor
 	double InitialTimestamp = 0;
 	double LastHitTimestamp = 0;
 	double TerminationTimestamp = 0;
+	double NextSnapshotTimestamp = 0;
 
 	void DumpToCsv(const FString& Path) const;
 
@@ -65,6 +68,9 @@ public:
 		meta=(UIMin=1, ClampMin=1, UIMax=300, ClampMax=300, Units="s", EditCondition="TakeSnapshots"))
 	int SecondsBetweenSnapshots = 15;
 
+	UPROPERTY(EditAnywhere, meta=(UIMin=1, ClampMin=1))
+	int ExpectedRpm = 1;
+
 	UPROPERTY(VisibleInstanceOnly)
 	int TotalHits = 0;
 
@@ -82,4 +88,7 @@ public:
 
 protected:
 	virtual void BeginPlay() override;
+
+	double CalculateFireRate(double Timestamp, int Hits) const;
+	double CalculateError(double Timestamp, int Hits) const;
 };

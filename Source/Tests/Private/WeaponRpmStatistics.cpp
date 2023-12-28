@@ -13,10 +13,10 @@ void AWeaponRpmStatistics::DumpToCsv(const FString& Path) const
 	UE_LOGFMT(LogIcarusTests, Display, "CSV path `{Path}`", Path);
 
 	FString Data;
-	Data.Append(TEXT("Time (Seconds);Hits;RPM\n"));
-	for (const auto& [Timestamp, Hits] : Snapshots)
+	Data.Append(TEXT("Time (Seconds);Hits;RPM;% Error\n"));
+	for (const auto& [Timestamp, Hits, FireRate, Error] : Snapshots)
 	{
-		Data.Appendf(TEXT("%.3f;%d;%.3f\n"), Timestamp, Hits, Hits / (Timestamp / 60));
+		Data.Appendf(TEXT("%.1f;%d;%.1f;%.1f%%\n"), Timestamp, Hits, FireRate, Error);
 	}
 
 	if (FFileHelper::SaveStringToFile(Data, GetData(Path), FFileHelper::EEncodingOptions::ForceUTF8WithoutBOM))
@@ -41,6 +41,7 @@ void AWeaponRpmStatistics::Restart()
 	InitialTimestamp = 0;
 	LastHitTimestamp = 0;
 	TerminationTimestamp = 0;
+	NextSnapshotTimestamp = 0;
 	TotalHits = 0;
 	Snapshots.Reset();
 }
@@ -49,6 +50,8 @@ AWeaponRpmStatistics::AWeaponRpmStatistics()
 {
 	PrimaryActorTick.bCanEverTick = true;
 	PrimaryActorTick.bStartWithTickEnabled = true;
+	PrimaryActorTick.TickInterval = 0;
+	PrimaryActorTick.TickGroup = TG_PostPhysics;
 }
 
 float AWeaponRpmStatistics::TakeDamage(float, const FDamageEvent& DamageEvent,
@@ -69,6 +72,7 @@ float AWeaponRpmStatistics::TakeDamage(float, const FDamageEvent& DamageEvent,
 				Status = EStatus::Sampling;
 				InitialTimestamp = Now;
 				TerminationTimestamp = Now + SecondsToSample;
+				NextSnapshotTimestamp = Now + SecondsBetweenSnapshots;
 				UE_LOGFMT(LogIcarusTests, Display, "{CsvName} started sampling at {Timestamp}.", CsvName, Now);
 			}
 
@@ -96,16 +100,23 @@ void AWeaponRpmStatistics::Tick(float)
 	}
 
 	const double Now = GetWorld()->GetTimeSeconds();
-	if (TakeSnapshots && Now >= InitialTimestamp + SecondsBetweenSnapshots * (Snapshots.Num() + 1))
+	if (TakeSnapshots && Now >= NextSnapshotTimestamp)
 	{
-		Snapshots.Add({Now - InitialTimestamp, TotalHits});
+		NextSnapshotTimestamp += SecondsBetweenSnapshots;
+		const double Timestamp = Now - InitialTimestamp;
+		Snapshots.Add({
+			Timestamp, TotalHits, CalculateFireRate(Timestamp, TotalHits), CalculateError(Timestamp, TotalHits)
+		});
 	}
 
 	if (Now >= TerminationTimestamp)
 	{
 		UE_LOGFMT(LogIcarusTests, Display, "{ActorName} Terminated", GetName());
 		Status = EStatus::Terminated;
-		Snapshots.Add({Now - InitialTimestamp, TotalHits});
+		const double Timestamp = Now - InitialTimestamp;
+		Snapshots.Add({
+			Timestamp, TotalHits, CalculateFireRate(Timestamp, TotalHits), CalculateError(Timestamp, TotalHits)
+		});
 
 		const FString DirTree = FPaths::Combine(FPaths::ProjectDir(),TEXT("Csv"));
 		if (FPlatformFileManager::Get().GetPlatformFile().CreateDirectoryTree(*DirTree))
@@ -138,4 +149,16 @@ void AWeaponRpmStatistics::BeginPlay()
 	}
 #endif
 	Super::BeginPlay();
+}
+
+double AWeaponRpmStatistics::CalculateFireRate(double Timestamp, int Hits) const
+{
+	return Hits / (Timestamp / 60);
+}
+
+double AWeaponRpmStatistics::CalculateError(double Timestamp, int Hits) const
+{
+	const double ObservedFireRate = CalculateFireRate(Timestamp, Hits);
+	const double AbsoluteError = FMath::Abs(ExpectedRpm - ObservedFireRate);
+	return (AbsoluteError / ExpectedRpm) * 100;
 }
