@@ -9,19 +9,19 @@ public class IcarusEditorTarget : TargetRules
 		Type = TargetType.Editor;
 		DefaultBuildSettings = BuildSettingsVersion.V4;
 		IncludeOrderVersion = EngineIncludeOrderVersion.Unreal5_3;
-		ExtraModuleNames.AddRange(new string[] { "Icarus" });
-		RegisterModulesCreatedByRider();
+
+		ExtraModuleNames.AddRange(new[]
+		{
+			"Icarus", "WeaponSystem"
+		});
 
 		if (Target.Configuration != UnrealTargetConfiguration.Shipping)
-			ProjectDefinitions.Add("ICARUS_BUILD_TESTS");
-	}
-
-	private void RegisterModulesCreatedByRider()
-	{
-		ExtraModuleNames.AddRange(new string[]
 		{
-			"WeaponSystem",
-			"Tests"
-		});
+			ProjectDefinitions.Add("ICARUS_BUILD_TESTS");
+			ExtraModuleNames.AddRange(new[]
+			{
+				"Tests"
+			});
+		}
 	}
 }
