@@ -1,25 +1,31 @@
-﻿using System.Linq;
-using UnrealBuildTool;
+﻿using UnrealBuildTool;
 
 public class WeaponSystem : ModuleRules
 {
 	public WeaponSystem(ReadOnlyTargetRules Target) : base(Target)
 	{
-		PCHUsage = ModuleRules.PCHUsageMode.UseExplicitOrSharedPCHs;
+		PCHUsage = PCHUsageMode.UseExplicitOrSharedPCHs;
 
 		PublicDependencyModuleNames.AddRange(
-			new string[]
+			new[]
 			{
-				"Core",
+				"Core"
 			}
 		);
 
 		PrivateDependencyModuleNames.AddRange(
-			new string[]
+			new[]
 			{
 				"CoreUObject",
-				"Engine",
+				"Engine"
 			}
 		);
+
+		if (Target.Configuration != UnrealTargetConfiguration.Shipping)
+			PrivateDependencyModuleNames.AddRange(
+				new[]
+				{
+					"TraceLog"
+				});
 	}
 }

@@ -8,10 +8,13 @@
 #include "Components/ArrowComponent.h"
 #include "DrawDebugHelpers.h"
 #include "LogWeaponSystem.h"
+#include "WeaponSystemTrace.h"
 
 #include "Engine/DamageEvents.h"
 
 #include "Logging/StructuredLog.h"
+
+#include "ProfilingDebugging/MiscTrace.h"
 
 UBallisticWeaponComponent::UBallisticWeaponComponent()
 {
@@ -62,6 +65,7 @@ void UBallisticWeaponComponent::SetFireRate(int NewFireRateInRpm)
 	}
 #endif
 
+	TRACE_BOOKMARK(TEXT("BallisticWeapon.SetFireRate(%d): %s"), NewFireRateInRpm, *GetNameSafe(GetOwner()));
 	FireRateRpm = NewFireRateInRpm;
 	SecondsBetweenEachShot = GetSecondsBetweenShots();
 }
@@ -70,6 +74,7 @@ void UBallisticWeaponComponent::FireOnce()
 {
 	if (Status == EBallisticWeaponStatus::Ready && HasEnoughAmmoToFire() && HasEnoughTimePassedFromLastShot())
 	{
+		TRACE_CPUPROFILER_EVENT_SCOPE_ON_CHANNEL_STR("Ballistic Weapon FireOnce", WeaponSystemChannel);
 		if (IsBurstFire)
 		{
 			Status = EBallisticWeaponStatus::Firing;
@@ -85,6 +90,7 @@ void UBallisticWeaponComponent::StartFiring()
 {
 	if (Status == EBallisticWeaponStatus::Ready && HasEnoughAmmoToFire() && HasEnoughTimePassedFromLastShot())
 	{
+		TRACE_BOOKMARK(TEXT("BallisticWeapon.StartFiring: %s"), *GetNameSafe(GetOwner()));
 		Status = EBallisticWeaponStatus::Firing;
 		StatusNotificationQueue.Queue.NotifyOnFiringStarted |= 1;
 		if (IsBurstFire)
@@ -101,6 +107,7 @@ void UBallisticWeaponComponent::StopFiring()
 {
 	if (Status == EBallisticWeaponStatus::Firing)
 	{
+		TRACE_BOOKMARK(TEXT("BallisticWeapon.StopFiring: %s"), *GetNameSafe(GetOwner()));
 		Status = HasEnoughAmmoToFire() ? EBallisticWeaponStatus::Ready : EBallisticWeaponStatus::WaitingReload;
 		StatusNotificationQueue.Queue.NotifyOnFiringStopped |= 1;
 		StatusNotificationQueue.Queue.NotifyOnReloadRequested |= Status == EBallisticWeaponStatus::WaitingReload;
@@ -144,7 +151,8 @@ bool UBallisticWeaponComponent::HasEnoughTimePassedFromLastShot() const
 void UBallisticWeaponComponent::TickComponent(float DeltaTime, ELevelTick TickType,
                                               FActorComponentTickFunction* ThisTickFunction)
 {
-	UE_LOGFMT(LogWeaponSystem, VeryVerbose, "UBallisticWeaponComponent::TickComponent: {DeltaTime} s.", DeltaTime);
+	SCOPE_CYCLE_COUNTER(STAT_WeaponSystem_Tick);
+	TRACE_CPUPROFILER_EVENT_SCOPE_ON_CHANNEL_STR("Ballistic Weapon Tick", WeaponSystemChannel);
 
 	if (Status == EBallisticWeaponStatus::Firing)
 	{
@@ -178,6 +186,9 @@ void UBallisticWeaponComponent::TickComponent(float DeltaTime, ELevelTick TickTy
 
 void UBallisticWeaponComponent::Fire()
 {
+	SCOPE_CYCLE_COUNTER(STAT_WeaponSystem_Fire);
+	TRACE_CPUPROFILER_EVENT_SCOPE_ON_CHANNEL_STR("Ballistic Weapon Fire", WeaponSystemChannel);
+
 	UWorld* World = GetWorld();
 	checkf(World, TEXT("Tried to fire a weapon without a World available."));
 	const FVector MuzzleLocation = GetComponentLocation();
@@ -187,6 +198,8 @@ void UBallisticWeaponComponent::Fire()
 
 	if (AmmoType.IsHitScan)
 	{
+		TRACE_CPUPROFILER_EVENT_SCOPE_ON_CHANNEL_STR("Ballistic Weapon HitScan", WeaponSystemChannel);
+
 		// TODO: Support DamageFalloffCurve after the proper editor has been created
 		constexpr float MaximumDistance = 100'000; // 1000 m
 
@@ -218,6 +231,8 @@ void UBallisticWeaponComponent::Fire()
 	}
 	else
 	{
+		TRACE_CPUPROFILER_EVENT_SCOPE_ON_CHANNEL_STR("Ballistic Weapon Projectile", WeaponSystemChannel);
+
 #if !UE_BUILD_SHIPPING
 		if (!AmmoType.ProjectileClass)
 		{
@@ -244,6 +259,8 @@ void UBallisticWeaponComponent::UpdateMagazineAfterFiring()
 {
 	if (LIKELY(!HasInfiniteAmmo))
 	{
+		SCOPE_CYCLE_COUNTER(STAT_WeaponSystem_UpdateMagazine);
+		TRACE_CPUPROFILER_EVENT_SCOPE_ON_CHANNEL_STR("Ballistic Weapon Update Mag", WeaponSystemChannel);
 		CurrentMagazine -= AmmoUsedEachShot;
 #if !UE_BUILD_SHIPPING
 		if (CurrentMagazine < 0)
@@ -264,6 +281,8 @@ void UBallisticWeaponComponent::UpdateMagazineAfterFiring()
 
 void UBallisticWeaponComponent::ReloadMagazine()
 {
+	TRACE_CPUPROFILER_EVENT_SCOPE_ON_CHANNEL_STR("Ballistic Weapon Reload", WeaponSystemChannel);
+
 	if (ReloadingDiscardsEntireMagazine)
 	{
 		CurrentMagazine = 0;
@@ -300,6 +319,9 @@ void UBallisticWeaponComponent::NotifyStatusUpdate()
 	{
 		return;
 	}
+
+	SCOPE_CYCLE_COUNTER(STAT_WeaponSystem_Notify);
+	TRACE_CPUPROFILER_EVENT_SCOPE_ON_CHANNEL_STR("Ballistic Weapon Notify", WeaponSystemChannel);
 
 	if (OnStatusChanged.IsBound())
 	{
