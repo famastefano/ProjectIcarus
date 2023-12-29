@@ -110,26 +110,26 @@ public:
 
 	// Called whenever the weapon needs to reload.
 	// Won't be able to fire again until Reload() is called. 
-	UPROPERTY(BlueprintAssignable)
+	UPROPERTY(BlueprintAssignable, Transient)
 	FWeaponComponentBasicDelegateSignature OnReloadRequested;
 
 	// Started reloading.
-	UPROPERTY(BlueprintAssignable)
+	UPROPERTY(BlueprintAssignable, Transient)
 	FWeaponComponentBasicDelegateSignature OnReloadStarted;
 
 	// Reloading canceled.
-	UPROPERTY(BlueprintAssignable)
+	UPROPERTY(BlueprintAssignable, Transient)
 	FWeaponComponentBasicDelegateSignature OnReloadCanceled;
 
 	// Finished reloading. Ready to fire.
-	UPROPERTY(BlueprintAssignable)
+	UPROPERTY(BlueprintAssignable, Transient)
 	FWeaponComponentBasicDelegateSignature OnReloadCompleted;
 
 	// Couldn't reload.
-	UPROPERTY(BlueprintAssignable)
+	UPROPERTY(BlueprintAssignable, Transient)
 	FWeaponComponentBasicDelegateSignature OnReloadFailed;
 
-	UPROPERTY(BlueprintAssignable)
+	UPROPERTY(BlueprintAssignable, Transient)
 	FWeaponComponentBasicDelegateSignature OnFiringStarted;
 
 	// Stopped firing.
