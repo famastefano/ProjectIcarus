@@ -47,7 +47,7 @@ void UBallisticWeaponComponent::BeginPlay()
 	SecondsBetweenEachShot = GetSecondsBetweenShots();
 	LastFireTimestamp = -SecondsBetweenEachShot;
 	Status = HasEnoughAmmoToFire() ? EBallisticWeaponStatus::Ready : EBallisticWeaponStatus::WaitingReload;
-	StatusNotificationQueue.HasStatusChanged = 0;
+	StatusNotificationQueue = {};
 	Super::BeginPlay();
 }
 
@@ -78,7 +78,7 @@ void UBallisticWeaponComponent::FireOnce()
 		if (IsBurstFire)
 		{
 			Status = EBallisticWeaponStatus::Firing;
-			StatusNotificationQueue.Queue.NotifyOnFiringStarted |= 1;
+			StatusNotificationQueue.NotifyOnFiringStarted |= 1;
 		}
 		Fire();
 		UpdateMagazineAfterFiring();
@@ -92,7 +92,7 @@ void UBallisticWeaponComponent::StartFiring()
 	{
 		TRACE_BOOKMARK(TEXT("BallisticWeapon.StartFiring: %s"), *GetNameSafe(GetOwner()));
 		Status = EBallisticWeaponStatus::Firing;
-		StatusNotificationQueue.Queue.NotifyOnFiringStarted |= 1;
+		StatusNotificationQueue.NotifyOnFiringStarted |= 1;
 		if (IsBurstFire)
 		{
 			CurrentBurstFiringCount = ShotsFiredDuringBurstFire;
@@ -109,8 +109,8 @@ void UBallisticWeaponComponent::StopFiring()
 	{
 		TRACE_BOOKMARK(TEXT("BallisticWeapon.StopFiring: %s"), *GetNameSafe(GetOwner()));
 		Status = HasEnoughAmmoToFire() ? EBallisticWeaponStatus::Ready : EBallisticWeaponStatus::WaitingReload;
-		StatusNotificationQueue.Queue.NotifyOnFiringStopped |= 1;
-		StatusNotificationQueue.Queue.NotifyOnReloadRequested |= Status == EBallisticWeaponStatus::WaitingReload;
+		StatusNotificationQueue.NotifyOnFiringStopped |= 1;
+		StatusNotificationQueue.NotifyOnReloadRequested |= Status == EBallisticWeaponStatus::WaitingReload;
 		NotifyStatusUpdate();
 	}
 }
@@ -118,7 +118,7 @@ void UBallisticWeaponComponent::StopFiring()
 void UBallisticWeaponComponent::StartReloading()
 {
 	Status = EBallisticWeaponStatus::Reloading;
-	StatusNotificationQueue.Queue.NotifyOnReloadStarted |= 1;
+	StatusNotificationQueue.NotifyOnReloadStarted |= 1;
 	ReloadTimestamp = GetWorld()->TimeSeconds + SecondsToReload;
 }
 
@@ -127,8 +127,8 @@ void UBallisticWeaponComponent::CancelReloading()
 	if (Status == EBallisticWeaponStatus::Reloading)
 	{
 		Status = HasEnoughAmmoToFire() ? EBallisticWeaponStatus::Ready : EBallisticWeaponStatus::WaitingReload;
-		StatusNotificationQueue.Queue.NotifyOnReloadCanceled |= 1;
-		StatusNotificationQueue.Queue.NotifyOnReloadRequested |= Status == EBallisticWeaponStatus::WaitingReload;
+		StatusNotificationQueue.NotifyOnReloadCanceled |= 1;
+		StatusNotificationQueue.NotifyOnReloadRequested |= Status == EBallisticWeaponStatus::WaitingReload;
 	}
 }
 
@@ -170,15 +170,15 @@ void UBallisticWeaponComponent::TickComponent(float DeltaTime, ELevelTick TickTy
 		else
 		{
 			Status = EBallisticWeaponStatus::WaitingReload;
-			StatusNotificationQueue.Queue.NotifyOnReloadRequested |= 1;
-			StatusNotificationQueue.Queue.NotifyOnFiringStopped |= Status == EBallisticWeaponStatus::Firing;
+			StatusNotificationQueue.NotifyOnReloadRequested |= 1;
+			StatusNotificationQueue.NotifyOnFiringStopped |= Status == EBallisticWeaponStatus::Firing;
 		}
 	}
 	else if (Status == EBallisticWeaponStatus::Reloading && GetWorld()->TimeSeconds >= ReloadTimestamp)
 	{
 		ReloadMagazine();
 		Status = HasEnoughAmmoToFire() ? EBallisticWeaponStatus::Ready : EBallisticWeaponStatus::WaitingReload;
-		StatusNotificationQueue.Queue.NotifyOnReloadRequested |= Status == EBallisticWeaponStatus::WaitingReload;
+		StatusNotificationQueue.NotifyOnReloadRequested |= Status == EBallisticWeaponStatus::WaitingReload;
 	}
 
 	NotifyStatusUpdate();
@@ -242,15 +242,15 @@ void UBallisticWeaponComponent::Fire()
 		// TODO: Spawn Projectile Component
 	}
 
-	StatusNotificationQueue.Queue.NotifyOnShotFired |= 1;
+	StatusNotificationQueue.NotifyOnShotFired |= 1;
 
 	if (IsBurstFire)
 	{
 		if (--CurrentBurstFiringCount <= 0 && Status == EBallisticWeaponStatus::Firing)
 		{
 			Status = HasEnoughAmmoToFire() ? EBallisticWeaponStatus::Ready : EBallisticWeaponStatus::WaitingReload;
-			StatusNotificationQueue.Queue.NotifyOnFiringStopped |= 1;
-			StatusNotificationQueue.Queue.NotifyOnReloadRequested |= Status == EBallisticWeaponStatus::WaitingReload;
+			StatusNotificationQueue.NotifyOnFiringStopped |= 1;
+			StatusNotificationQueue.NotifyOnReloadRequested |= Status == EBallisticWeaponStatus::WaitingReload;
 		}
 	}
 }
@@ -272,9 +272,9 @@ void UBallisticWeaponComponent::UpdateMagazineAfterFiring()
 #endif
 		if (CurrentMagazine <= 0 && Status != EBallisticWeaponStatus::WaitingReload)
 		{
-			StatusNotificationQueue.Queue.NotifyOnFiringStopped |= Status == EBallisticWeaponStatus::Firing;
+			StatusNotificationQueue.NotifyOnFiringStopped |= Status == EBallisticWeaponStatus::Firing;
 			Status = EBallisticWeaponStatus::WaitingReload;
-			StatusNotificationQueue.Queue.NotifyOnReloadRequested |= 1;
+			StatusNotificationQueue.NotifyOnReloadRequested |= 1;
 		}
 	}
 }
@@ -299,23 +299,23 @@ void UBallisticWeaponComponent::ReloadMagazine()
 		{
 			CurrentMagazine += RoundsAvailable;
 			AmmoReserve -= RoundsAvailable;
-			StatusNotificationQueue.Queue.NotifyOnReloadCompleted |= 1;
+			StatusNotificationQueue.NotifyOnReloadCompleted |= 1;
 		}
 		else
 		{
-			StatusNotificationQueue.Queue.NotifyOnReloadFailed |= 1;
+			StatusNotificationQueue.NotifyOnReloadFailed |= 1;
 		}
 	}
 	else
 	{
 		CurrentMagazine = MagazineSize;
-		StatusNotificationQueue.Queue.NotifyOnReloadCompleted |= 1;
+		StatusNotificationQueue.NotifyOnReloadCompleted |= 1;
 	}
 }
 
 void UBallisticWeaponComponent::NotifyStatusUpdate()
 {
-	if (StatusNotificationQueue.HasStatusChanged == 0)
+	if (!HasPendingNotifications())
 	{
 		return;
 	}
@@ -328,38 +328,38 @@ void UBallisticWeaponComponent::NotifyStatusUpdate()
 		OnStatusChanged.Broadcast(Status);
 	}
 
-	if (StatusNotificationQueue.Queue.NotifyOnReloadRequested && OnReloadRequested.IsBound())
+	if (StatusNotificationQueue.NotifyOnReloadRequested && OnReloadRequested.IsBound())
 	{
 		OnReloadRequested.Broadcast();
 	}
-	if (StatusNotificationQueue.Queue.NotifyOnReloadStarted && OnReloadStarted.IsBound())
+	if (StatusNotificationQueue.NotifyOnReloadStarted && OnReloadStarted.IsBound())
 	{
 		OnReloadStarted.Broadcast();
 	}
-	if (StatusNotificationQueue.Queue.NotifyOnReloadCanceled && OnReloadCanceled.IsBound())
+	if (StatusNotificationQueue.NotifyOnReloadCanceled && OnReloadCanceled.IsBound())
 	{
 		OnReloadCanceled.Broadcast();
 	}
-	if (StatusNotificationQueue.Queue.NotifyOnReloadCompleted && OnReloadCompleted.IsBound())
+	if (StatusNotificationQueue.NotifyOnReloadCompleted && OnReloadCompleted.IsBound())
 	{
 		OnReloadCompleted.Broadcast();
 	}
-	if (StatusNotificationQueue.Queue.NotifyOnReloadFailed && OnReloadFailed.IsBound())
+	if (StatusNotificationQueue.NotifyOnReloadFailed && OnReloadFailed.IsBound())
 	{
 		OnReloadFailed.Broadcast();
 	}
-	if (StatusNotificationQueue.Queue.NotifyOnFiringStarted && OnFiringStarted.IsBound())
+	if (StatusNotificationQueue.NotifyOnFiringStarted && OnFiringStarted.IsBound())
 	{
 		OnFiringStarted.Broadcast();
 	}
-	if (StatusNotificationQueue.Queue.NotifyOnFiringStopped && OnFiringStopped.IsBound())
+	if (StatusNotificationQueue.NotifyOnFiringStopped && OnFiringStopped.IsBound())
 	{
 		OnFiringStopped.Broadcast();
 	}
-	if (StatusNotificationQueue.Queue.NotifyOnShotFired && OnShotFired.IsBound())
+	if (StatusNotificationQueue.NotifyOnShotFired && OnShotFired.IsBound())
 	{
 		OnShotFired.Broadcast();
 	}
 
-	StatusNotificationQueue.HasStatusChanged = 0;
+	StatusNotificationQueue = {};
 }

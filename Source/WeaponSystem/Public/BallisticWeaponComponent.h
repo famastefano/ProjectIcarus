@@ -203,25 +203,23 @@ protected:
 
 	EBallisticWeaponStatus Status;
 
-	// TODO: Check type-punning safeness with MSVC. AFAIK it's safe-ish due to the compiler supporting C as well.
-	union
+	struct alignas(uint8) FNotifyQueueFlags
 	{
-		struct alignas(uint8) FNotifyQueueFlags
-		{
-			uint8 NotifyOnReloadRequested : 1;
-			uint8 NotifyOnReloadStarted : 1;
-			uint8 NotifyOnReloadCanceled : 1;
-			uint8 NotifyOnReloadCompleted : 1;
-			uint8 NotifyOnReloadFailed : 1;
-			uint8 NotifyOnFiringStarted : 1;
-			uint8 NotifyOnFiringStopped : 1;
-			uint8 NotifyOnShotFired : 1;
-		} Queue;
-
-		uint8 HasStatusChanged;
-
-		static_assert(sizeof(FNotifyQueueFlags) <= sizeof(HasStatusChanged));
+		uint8 NotifyOnReloadRequested : 1;
+		uint8 NotifyOnReloadStarted : 1;
+		uint8 NotifyOnReloadCanceled : 1;
+		uint8 NotifyOnReloadCompleted : 1;
+		uint8 NotifyOnReloadFailed : 1;
+		uint8 NotifyOnFiringStarted : 1;
+		uint8 NotifyOnFiringStopped : 1;
+		uint8 NotifyOnShotFired : 1;
 	} StatusNotificationQueue;
+
+	FORCEINLINE constexpr bool HasPendingNotifications() const
+	{
+		static_assert(sizeof(StatusNotificationQueue) == sizeof(uint8));
+		return std::bit_cast<uint8>(StatusNotificationQueue) != 0;
+	}
 
 public:
 	virtual void TickComponent(float DeltaTime, ELevelTick TickType,
