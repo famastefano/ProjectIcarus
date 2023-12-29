@@ -22,6 +22,24 @@ enum class EBallisticWeaponStatus
 	Reloading,
 };
 
+UENUM(BlueprintType)
+enum class EBallisticWeaponFiringStrategy : uint8
+{
+	// Let the implementation decide which one is better.
+	// Warning: Strategy is chosen at BeginPlay,
+	// will *NOT* change automatically anymore, ie. by calling SetFireRate()
+	Automatic,
+
+	// Precise for fire-rates up to 1200 RPM
+	Timestamp,
+
+	// More precise for fire-rates over 1400 RPM
+	TimestampWithAccumulator,
+
+	// EXPERIMENTAL, DO NOT USE
+	TimestampIntegerBased,
+};
+
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FWeaponComponentBasicDelegateSignature);
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FWeaponComponentNotifyStatusChangeSignature, EBallisticWeaponStatus, Status)
@@ -89,6 +107,9 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, BlueprintSetter=SetFireRate, Category="Weapon",
 		meta=(ClampMin=1, UIMin=1))
 	int FireRateRpm = 1;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, BlueprintSetter="SetFiringStrategy", Category="Weapon")
+	EBallisticWeaponFiringStrategy FiringStrategy = EBallisticWeaponFiringStrategy::Automatic;
 
 	// If the weapon shoots in burst fire mode.
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Weapon")
@@ -190,6 +211,9 @@ public:
 	UFUNCTION(BlueprintCallable)
 	bool HasEnoughTimePassedFromLastShot() const;
 
+	UFUNCTION(BlueprintCallable)
+	void SetFiringStrategy(EBallisticWeaponFiringStrategy NewStrategy);
+
 protected:
 	void Fire();
 	void UpdateMagazineAfterFiring();
@@ -200,6 +224,8 @@ protected:
 	double SecondsBetweenEachShot;
 	double ReloadTimestamp;
 	int CurrentBurstFiringCount;
+
+	double MissedShotsThisFrame;
 
 	EBallisticWeaponStatus Status;
 

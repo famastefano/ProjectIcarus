@@ -48,6 +48,13 @@ void UBallisticWeaponComponent::BeginPlay()
 	LastFireTimestamp = -SecondsBetweenEachShot;
 	Status = HasEnoughAmmoToFire() ? EBallisticWeaponStatus::Ready : EBallisticWeaponStatus::WaitingReload;
 	StatusNotificationQueue = {};
+	if (FiringStrategy == EBallisticWeaponFiringStrategy::Automatic)
+	{
+		FiringStrategy = FireRateRpm <= 1200
+			                 ? EBallisticWeaponFiringStrategy::Timestamp
+			                 : EBallisticWeaponFiringStrategy::TimestampWithAccumulator;
+	}
+	SetFiringStrategy(FiringStrategy);
 	Super::BeginPlay();
 }
 
@@ -145,7 +152,24 @@ bool UBallisticWeaponComponent::HasEnoughAmmoToFire() const
 
 bool UBallisticWeaponComponent::HasEnoughTimePassedFromLastShot() const
 {
-	return GetWorld()->TimeSeconds >= LastFireTimestamp + SecondsBetweenEachShot;
+	switch (FiringStrategy)
+	{
+	default:
+	case EBallisticWeaponFiringStrategy::Timestamp:
+	case EBallisticWeaponFiringStrategy::TimestampWithAccumulator:
+	case EBallisticWeaponFiringStrategy::TimestampIntegerBased:
+		return GetWorld()->TimeSeconds >= LastFireTimestamp + SecondsBetweenEachShot;
+	}
+}
+
+void UBallisticWeaponComponent::SetFiringStrategy(EBallisticWeaponFiringStrategy NewStrategy)
+{
+	check(NewStrategy != EBallisticWeaponFiringStrategy::TimestampIntegerBased);
+	FiringStrategy = NewStrategy;
+	if (NewStrategy == EBallisticWeaponFiringStrategy::TimestampWithAccumulator)
+	{
+		MissedShotsThisFrame = 0;
+	}
 }
 
 void UBallisticWeaponComponent::TickComponent(float DeltaTime, ELevelTick TickType,
@@ -194,7 +218,17 @@ void UBallisticWeaponComponent::Fire()
 	const FVector MuzzleLocation = GetComponentLocation();
 	const FVector MuzzleDirection = GetForwardVector();
 
-	LastFireTimestamp = World->TimeSeconds;
+	int ShotsToFire = 1;
+	const double Now = World->TimeSeconds;
+	if (FiringStrategy == EBallisticWeaponFiringStrategy::TimestampWithAccumulator)
+	{
+		const double Delta = Now - LastFireTimestamp;
+		MissedShotsThisFrame += Delta > 1.0 ? Delta - 1.0 : 0.0;
+		ShotsToFire += FMath::Floor(MissedShotsThisFrame);
+		MissedShotsThisFrame -= ShotsToFire - 1;
+	}
+
+	LastFireTimestamp = Now;
 
 	if (AmmoType.IsHitScan)
 	{
@@ -225,7 +259,17 @@ void UBallisticWeaponComponent::Fire()
 				// TODO: Calculate damage falloff based on distance
 				AActor* Owner = GetOwner();
 				const FDamageEvent DamageEvent{AmmoType.DamageType};
-				ActorHit->TakeDamage(AmmoType.DamageAmount, DamageEvent, Owner->GetInstigatorController(), Owner);
+
+				// ReSharper disable CppDefaultCaseNotHandledInSwitchStatement
+				switch (ShotsToFire)
+				// ReSharper restore CppDefaultCaseNotHandledInSwitchStatement
+				{
+				case 2:
+					ActorHit->TakeDamage(AmmoType.DamageAmount, DamageEvent, Owner->GetInstigatorController(), Owner);
+				case 1:
+					ActorHit->TakeDamage(AmmoType.DamageAmount, DamageEvent, Owner->GetInstigatorController(), Owner);
+					break;
+				}
 			}
 		}
 	}
