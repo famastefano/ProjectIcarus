@@ -254,18 +254,20 @@ void UBallisticWeaponComponent::Fire()
 
 			if (AActor* ActorHit = HitResult.GetActor(); ActorHit && ActorHit->CanBeDamaged())
 			{
-				// TODO: Calculate damage falloff based on distance
 				AActor* Owner = GetOwner();
 				const FDamageEvent DamageEvent{AmmoType.DamageType};
+
+				const float DamageScaleFactor = AmmoType.DamageFalloffCurve.GetScaledFactor(HitResult.Distance);
+				const float DamageValue = AmmoType.DamageAmount * DamageScaleFactor;
 
 				// ReSharper disable CppDefaultCaseNotHandledInSwitchStatement
 				switch (ShotsToFire)
 				// ReSharper restore CppDefaultCaseNotHandledInSwitchStatement
 				{
 				case 2:
-					ActorHit->TakeDamage(AmmoType.DamageAmount, DamageEvent, Owner->GetInstigatorController(), Owner);
+					ActorHit->TakeDamage(DamageValue, DamageEvent, Owner->GetInstigatorController(), Owner);
 				case 1:
-					ActorHit->TakeDamage(AmmoType.DamageAmount, DamageEvent, Owner->GetInstigatorController(), Owner);
+					ActorHit->TakeDamage(DamageValue, DamageEvent, Owner->GetInstigatorController(), Owner);
 					break;
 				}
 			}

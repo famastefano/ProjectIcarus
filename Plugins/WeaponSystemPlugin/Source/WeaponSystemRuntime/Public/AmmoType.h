@@ -3,6 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "DamageFalloffCurve.h"
 #include "AmmoType.generated.h"
 
 /**
@@ -30,5 +31,5 @@ struct WEAPONSYSTEMRUNTIME_API FAmmoType
 	TSubclassOf<UDamageType> DamageType;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Damage", meta=(EditCondition="IsHitScan"))
-	TObjectPtr<UCurveFloat> DamageFalloffCurve;
+	FDamageFalloffCurve DamageFalloffCurve;
 };
