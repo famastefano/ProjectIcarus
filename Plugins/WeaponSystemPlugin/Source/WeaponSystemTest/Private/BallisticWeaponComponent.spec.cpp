@@ -8,7 +8,7 @@
 
 #include "Misc/AutomationTest.h"
 
-BEGIN_DEFINE_SPEC(FBallisticWeaponComponent_Spec, "Icarus.WeaponSystem.BallisticWeaponComponent",
+BEGIN_DEFINE_SPEC(FBallisticWeaponComponent_Spec, "WeaponSystemPlugin.Runtime.BallisticWeaponComponent",
                   EAutomationTestFlags::ApplicationContextMask
                   | EAutomationTestFlags::HighPriority | EAutomationTestFlags::ProductFilter)
 
