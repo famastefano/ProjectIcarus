@@ -7,20 +7,12 @@ public class IcarusTarget : TargetRules
 	public IcarusTarget(TargetInfo Target) : base(Target)
 	{
 		Type = TargetType.Game;
+		CppStandard = CppStandardVersion.EngineDefault;
 		DefaultBuildSettings = BuildSettingsVersion.V4;
 		IncludeOrderVersion = EngineIncludeOrderVersion.Unreal5_3;
 		ExtraModuleNames.AddRange(new[]
 		{
-			"Icarus", "WeaponSystem"
+			"Icarus"
 		});
-
-		if (Target.Configuration != UnrealTargetConfiguration.Shipping)
-		{
-			ProjectDefinitions.Add("ICARUS_BUILD_TESTS");
-			ExtraModuleNames.AddRange(new[]
-			{
-				"Tests"
-			});
-		}
 	}
 }
