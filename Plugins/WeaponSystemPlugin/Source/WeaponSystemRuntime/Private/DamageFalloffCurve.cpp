@@ -8,11 +8,7 @@
 
 int FDamageFalloffCurve::CompareKeyPoints(const FDamageFalloffKeypoint& A, const FDamageFalloffKeypoint& B)
 {
-	if (FMath::IsNearlyEqual(A.DistanceInUnits, B.DistanceInUnits, 0.5))
-	{
-		return 0;
-	}
-	return B.DistanceInUnits - A.DistanceInUnits;
+	return FMath::RoundFromZero(B.DistanceInUnits - A.DistanceInUnits);
 }
 
 float FDamageFalloffCurve::GetScaledFactor(const FDamageFalloffKeypoint& LowerBound,
@@ -50,7 +46,7 @@ bool FDamageFalloffCurve::IsSortingRequired() const
 
 void FDamageFalloffCurve::AddKeyPoint(FDamageFalloffKeypoint Keypoint)
 {
-	LowerBoundIndex = UpperBoundIndex = -1;
+	LastLowerBoundIndex = LastUpperBoundIndex = -1;
 	KeyPoints.Add(Keypoint);
 	if (KeyPoints.Num() > 1 && CompareKeyPoints(KeyPoints.Last(1), KeyPoints.Last(0)) > 0)
 	{
@@ -60,7 +56,7 @@ void FDamageFalloffCurve::AddKeyPoint(FDamageFalloffKeypoint Keypoint)
 
 void FDamageFalloffCurve::SortKeyPoints()
 {
-	LowerBoundIndex = UpperBoundIndex = -1;
+	LastLowerBoundIndex = LastUpperBoundIndex = -1;
 	Algo::Sort(KeyPoints, [](const FDamageFalloffKeypoint& A, const FDamageFalloffKeypoint& B)
 	{
 		return CompareKeyPoints(A, B) <= 0;
@@ -70,30 +66,30 @@ void FDamageFalloffCurve::SortKeyPoints()
 float FDamageFalloffCurve::GetScaledFactor(float DistanceInUnits)
 {
 	check(IsValid());
-	if (LowerBoundIndex != INDEX_NONE)
+	if (LastLowerBoundIndex != INDEX_NONE)
 	{
-		const auto& LowerBound = KeyPoints[LowerBoundIndex];
-		const auto& UpperBound = KeyPoints[UpperBoundIndex];
+		const auto& LowerBound = KeyPoints[LastLowerBoundIndex];
+		const auto& UpperBound = KeyPoints[LastUpperBoundIndex];
 		if (LowerBound.DistanceInUnits <= DistanceInUnits)
 		{
 			return GetScaledFactor(LowerBound, UpperBound, DistanceInUnits);
 		}
 	}
 
-	LowerBoundIndex = KeyPoints.FindLastByPredicate([DistanceInUnits](const FDamageFalloffKeypoint& A)
+	LastLowerBoundIndex = KeyPoints.FindLastByPredicate([DistanceInUnits](const FDamageFalloffKeypoint& A)
 	{
 		return A.DistanceInUnits <= DistanceInUnits;
 	});
-	if (LowerBoundIndex != INDEX_NONE)
+	if (LastLowerBoundIndex != INDEX_NONE)
 	{
-		if (LowerBoundIndex < KeyPoints.Num() - 1)
+		if (LastLowerBoundIndex < KeyPoints.Num() - 1)
 		{
-			UpperBoundIndex = LowerBoundIndex + 1;
-			return GetScaledFactor(KeyPoints[LowerBoundIndex], KeyPoints[UpperBoundIndex], DistanceInUnits);
+			LastUpperBoundIndex = LastLowerBoundIndex + 1;
+			return GetScaledFactor(KeyPoints[LastLowerBoundIndex], KeyPoints[LastUpperBoundIndex], DistanceInUnits);
 		}
 
-		UpperBoundIndex = LowerBoundIndex;
-		return KeyPoints[LowerBoundIndex].DamageScaling;
+		LastUpperBoundIndex = LastLowerBoundIndex;
+		return KeyPoints[LastLowerBoundIndex].DamageScaling;
 	}
 
 #if !UE_BUILD_SHIPPING
