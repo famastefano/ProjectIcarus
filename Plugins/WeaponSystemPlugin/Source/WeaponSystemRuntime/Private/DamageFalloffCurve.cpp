@@ -22,7 +22,7 @@ float FDamageFalloffCurve::GetScaledFactor(const FDamageFalloffKeypoint& LowerBo
 	// To use FMath::Lerp we need an Alpha value in the range [0.0, 1.0]
 	// Given L = LowerBound, U = UpperBound, D = Distance
 	// Our Alpha will be how D is near to U.
-	// To map [L, U] into [0.0, 1.0], we just shift the range to [D-L, U-L] and divide by U
+	// To map [L, U] into [0.0, 1.0], we just shift the range to [D-L, U-L] and divide by U-L
 	const float ShiftedLowerBound = Distance - LowerBound.DistanceInUnits;
 	const float ShiftedUpperBound = UpperBound.DistanceInUnits - LowerBound.DistanceInUnits;
 	const float Alpha = ShiftedLowerBound / ShiftedUpperBound;
