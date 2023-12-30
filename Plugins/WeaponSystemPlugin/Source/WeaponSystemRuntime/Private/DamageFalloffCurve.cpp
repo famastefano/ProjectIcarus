@@ -95,7 +95,7 @@ float FDamageFalloffCurve::GetScaledFactor(float DistanceInUnits)
 #if !UE_BUILD_SHIPPING
 	UE_LOGFMT(LogWeaponSystem, Warning,
 	          "FDamageFalloffCurve::GetScaledFactor({Distance}) doesn't have a KeyPoint <= than {Distance}, so it returned zero.",
-	          DistanceInUnits);
+	          ("Distance", DistanceInUnits));
 #endif
 
 	return 0;
