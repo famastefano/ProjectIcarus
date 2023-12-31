@@ -8,7 +8,7 @@
 
 int FDamageFalloffCurve::CompareKeyPoints(const FDamageFalloffKeypoint& A, const FDamageFalloffKeypoint& B)
 {
-	return FMath::RoundFromZero(B.DistanceInUnits - A.DistanceInUnits);
+	return FMath::RoundFromZero(A.DistanceInUnits - B.DistanceInUnits);
 }
 
 float FDamageFalloffCurve::GetScaledFactor(const FDamageFalloffKeypoint& LowerBound,
