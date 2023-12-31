@@ -25,7 +25,6 @@ struct WEAPONSYSTEMRUNTIME_API FDamageFalloffCurve
 	decltype(KeyPoints)::SizeType LastLowerBoundIndex = INDEX_NONE;
 	decltype(KeyPoints)::SizeType LastUpperBoundIndex = INDEX_NONE;
 
-	static int CompareKeyPoints(const FDamageFalloffKeypoint& A, const FDamageFalloffKeypoint& B);
 	static float GetScaledFactor(const FDamageFalloffKeypoint& LowerBound,
 	                             const FDamageFalloffKeypoint& UpperBound,
 	                             float Distance);

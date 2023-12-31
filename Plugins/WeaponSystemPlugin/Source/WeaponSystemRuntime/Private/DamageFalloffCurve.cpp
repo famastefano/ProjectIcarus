@@ -6,10 +6,14 @@
 
 #include "Logging/StructuredLog.h"
 
-int FDamageFalloffCurve::CompareKeyPoints(const FDamageFalloffKeypoint& A, const FDamageFalloffKeypoint& B)
+template <>
+struct TLess<FDamageFalloffKeypoint>
 {
-	return FMath::RoundFromZero(A.DistanceInUnits - B.DistanceInUnits);
-}
+	FORCEINLINE bool operator()(const FDamageFalloffKeypoint& A, const FDamageFalloffKeypoint& B) const
+	{
+		return A.DistanceInUnits < B.DistanceInUnits;
+	}
+};
 
 float FDamageFalloffCurve::GetScaledFactor(const FDamageFalloffKeypoint& LowerBound,
                                            const FDamageFalloffKeypoint& UpperBound,
@@ -32,23 +36,14 @@ bool FDamageFalloffCurve::IsValid() const
 
 bool FDamageFalloffCurve::IsSortingRequired() const
 {
-	for (decltype(KeyPoints)::SizeType i = 0; i < KeyPoints.Num() - 1; ++i)
-	{
-		const auto& A = KeyPoints[i];
-		const auto& B = KeyPoints[i + 1];
-		if (CompareKeyPoints(A, B) > 0)
-		{
-			return true;
-		}
-	}
-	return false;
+	return !Algo::IsSorted(KeyPoints, TLess<FDamageFalloffKeypoint>{});
 }
 
 void FDamageFalloffCurve::AddKeyPoint(FDamageFalloffKeypoint Keypoint)
 {
 	LastLowerBoundIndex = LastUpperBoundIndex = -1;
 	KeyPoints.Add(Keypoint);
-	if (KeyPoints.Num() > 1 && CompareKeyPoints(KeyPoints.Last(1), KeyPoints.Last(0)) > 0)
+	if (KeyPoints.Num() > 1 && TLess<FDamageFalloffKeypoint>{}(KeyPoints.Last(0), KeyPoints.Last(1)))
 	{
 		SortKeyPoints();
 	}
@@ -57,10 +52,7 @@ void FDamageFalloffCurve::AddKeyPoint(FDamageFalloffKeypoint Keypoint)
 void FDamageFalloffCurve::SortKeyPoints()
 {
 	LastLowerBoundIndex = LastUpperBoundIndex = -1;
-	Algo::Sort(KeyPoints, [](const FDamageFalloffKeypoint& A, const FDamageFalloffKeypoint& B)
-	{
-		return CompareKeyPoints(A, B) <= 0;
-	});
+	KeyPoints.Sort(TLess<FDamageFalloffKeypoint>{});
 }
 
 float FDamageFalloffCurve::GetScaledFactor(float DistanceInUnits)
