@@ -1,6 +1,8 @@
 ﻿#include "LogWeaponSystemTest.h"
 #include "DamageFalloffCurve.h"
 
+#include "Algo/Compare.h"
+
 #include "Logging/StructuredLog.h"
 #include "Misc/AutomationTest.h"
 
@@ -90,9 +92,37 @@ void FDamageFalloffCurve_Spec::Define()
 				Curve.KeyPoints.Append(KeyPointsToInsert);
 				TestTrueExpr(Curve.IsSortingRequired());
 			});
-		});
 
-		// TODO: Sorting works correctly
-		// TODO: Acquiring scaling factor works as expected
+			It("Should sort the element properly", [this]
+			{
+				TArray KeyPointsToInsert
+				{
+					FDamageFalloffKeypoint{.DamageScaling = 4, .DistanceInUnits = 4},
+					FDamageFalloffKeypoint{.DamageScaling = 2, .DistanceInUnits = 2},
+					FDamageFalloffKeypoint{.DamageScaling = 1, .DistanceInUnits = 1},
+					FDamageFalloffKeypoint{.DamageScaling = 3, .DistanceInUnits = 3},
+				};
+				TArray ExpectedKeyPoints
+				{
+					FDamageFalloffKeypoint{.DamageScaling = 1, .DistanceInUnits = 1},
+					FDamageFalloffKeypoint{.DamageScaling = 2, .DistanceInUnits = 2},
+					FDamageFalloffKeypoint{.DamageScaling = 3, .DistanceInUnits = 3},
+					FDamageFalloffKeypoint{.DamageScaling = 4, .DistanceInUnits = 4},
+				};
+
+				Curve.KeyPoints.Append(KeyPointsToInsert);
+				Curve.SortKeyPoints();
+				TestTrueExpr(!Curve.IsSortingRequired());
+				using FKeyPointConst = const FDamageFalloffKeypoint&;
+				bool AreExpectedKeyPoints = Algo::Compare(Curve.KeyPoints, ExpectedKeyPoints,
+				                                          [](FKeyPointConst A, FKeyPointConst B)
+				                                          {
+					                                          return std::tie(A.DamageScaling, A.DistanceInUnits) ==
+						                                          std::tie(
+							                                          B.DamageScaling, B.DistanceInUnits);
+				                                          });
+				TestTrueExpr(AreExpectedKeyPoints);
+			});
+		});
 	});
 }
