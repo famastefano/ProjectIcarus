@@ -16,6 +16,8 @@ END_DEFINE_SPEC(FDamageFalloffCurve_Spec)
 
 void FDamageFalloffCurve_Spec::Define()
 {
+	constexpr float FactorComparisonTolerance = 0.01;
+
 	Describe("A Damage Falloff Curve", [this]
 	{
 		BeforeEach([this]
@@ -122,6 +124,81 @@ void FDamageFalloffCurve_Spec::Define()
 							                                          B.DamageScaling, B.DistanceInUnits);
 				                                          });
 				TestTrueExpr(AreExpectedKeyPoints);
+			});
+
+			Describe("And you want the scaling factor", [this]
+			{
+				BeforeEach([this]
+				{
+					Curve.KeyPoints.Append(
+						{
+							FDamageFalloffKeypoint{.DamageScaling = 1, .DistanceInUnits = 1},
+							FDamageFalloffKeypoint{.DamageScaling = 2, .DistanceInUnits = 2},
+							FDamageFalloffKeypoint{.DamageScaling = 3, .DistanceInUnits = 3},
+							FDamageFalloffKeypoint{.DamageScaling = 4, .DistanceInUnits = 4}
+						}
+					);
+				});
+
+				It("Should return zero, if Distance < First.Distance", [this]
+				{
+					const double Distance = Curve.KeyPoints[0].DistanceInUnits - 1;
+					TestTrueExpr(Curve.GetScaledFactor(Distance) == 0.0);
+				});
+
+				It("Should return First.Factor, if Distance == First.Distance", [this]
+				{
+					const auto& First = Curve.KeyPoints[0];
+					const double Factor = Curve.GetScaledFactor(First.DistanceInUnits);
+					TestTrueExpr(FMath::IsNearlyEqual(First.DamageScaling, Factor, FactorComparisonTolerance));
+				});
+
+				It("Should return Lower.Factor, if Distance == Lower.Distance", [this]
+				{
+					const auto& Lower = Curve.KeyPoints[2];
+					const double Factor = Curve.GetScaledFactor(Lower.DistanceInUnits);
+					TestTrueExpr(FMath::IsNearlyEqual(Lower.DamageScaling, Factor, FactorComparisonTolerance));
+				});
+
+				It("Should return Last.Factor, if Distance == Last.Distance", [this]
+				{
+					const auto& Last = Curve.KeyPoints.Last();
+					const double Factor = Curve.GetScaledFactor(Last.DistanceInUnits);
+					TestTrueExpr(FMath::IsNearlyEqual(Last.DamageScaling, Factor,FactorComparisonTolerance));
+				});
+
+
+				It("Should return Last.Factor, if Distance > Last.Distance", [this]
+				{
+					const auto& Last = Curve.KeyPoints.Last();
+					const double Factor = Curve.GetScaledFactor(Last.DistanceInUnits + 1);
+					TestTrueExpr(FMath::IsNearlyEqual(Last.DamageScaling, Factor, FactorComparisonTolerance));
+				});
+
+				It("Should return the expected factor, if Distance is half the one between Lower and Upper", [this]
+				{
+					const auto& Lower = Curve.KeyPoints[2];
+					const auto& Upper = Curve.KeyPoints[3];
+					const float ExpectedFactor = (Lower.DamageScaling + Upper.DamageScaling) / 2;
+					const float Distance = (Lower.DistanceInUnits + Upper.DistanceInUnits) / 2;
+					const float ActualFactor = Curve.GetScaledFactor(Distance);
+					TestTrueExpr(FMath::IsNearlyEqual(ActualFactor, ExpectedFactor, FactorComparisonTolerance));
+				});
+
+				It(
+					"Should return the expected factor, if the Distance is scaled between [Lower, Upper] * Factor, Factor -> [0.0, 1.0]",
+					[this]
+					{
+						const auto& Lower = Curve.KeyPoints[1];
+						const auto& Upper = Curve.KeyPoints[2];
+						for (float Factor = 0.0; Factor <= 1.0; Factor += 0.1)
+						{
+							const float Distance = FMath::Lerp(Lower.DistanceInUnits, Upper.DistanceInUnits, Factor);
+							const float ExpectedFactor = FMath::Lerp(Lower.DamageScaling, Upper.DamageScaling, Factor);
+							const float ActualFactor = Curve.GetScaledFactor(Distance);
+							TestTrueExpr(FMath::IsNearlyEqual(ActualFactor, ExpectedFactor, FactorComparisonTolerance));
+						}
+					});
 			});
 		});
 	});
