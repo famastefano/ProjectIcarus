@@ -31,5 +31,5 @@ struct WEAPONSYSTEMRUNTIME_API FAmmoType
 	TSubclassOf<UDamageType> DamageType;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Damage", meta=(EditCondition="IsHitScan"))
-	FDamageFalloffCurve DamageFalloffCurve;
+	TObjectPtr<UDamageFalloffCurve> DamageFalloffCurve;
 };

@@ -10,28 +10,34 @@ struct FDamageFalloffKeypoint
 {
 	GENERATED_BODY()
 
-	float DamageScaling;
-	float DistanceInUnits;
+	UPROPERTY(EditAnywhere, meta=(UIMin=0, ClampMin=0, Units="Percent"))
+	float DamageMultiplier;
+
+	UPROPERTY(EditAnywhere, meta=(UIMin=0, ClampMin=0, Units="Meters"))
+	float Distance;
 };
 
-USTRUCT(Blueprintable, BlueprintType)
-struct WEAPONSYSTEMRUNTIME_API FDamageFalloffCurve
+UCLASS(Blueprintable, BlueprintType)
+class WEAPONSYSTEMRUNTIME_API UDamageFalloffCurve : public UObject
 {
 	GENERATED_BODY()
 
+public:
 	UPROPERTY(EditInstanceOnly, Category="Damage")
 	TArray<FDamageFalloffKeypoint> KeyPoints;
 
+private:
 	decltype(KeyPoints)::SizeType LastLowerBoundIndex = INDEX_NONE;
 	decltype(KeyPoints)::SizeType LastUpperBoundIndex = INDEX_NONE;
 
-	static float GetScaledFactor(const FDamageFalloffKeypoint& LowerBound,
-	                             const FDamageFalloffKeypoint& UpperBound,
-	                             float Distance);
-
+public:
+	static float GetDamageMultiplier(const FDamageFalloffKeypoint& LowerBound,
+	                                 const FDamageFalloffKeypoint& UpperBound,
+	                                 float Distance);
+	
 	bool IsValid() const;
 	bool IsSortingRequired() const;
 	void AddKeyPoint(FDamageFalloffKeypoint Keypoint);
 	void SortKeyPoints();
-	float GetScaledFactor(float DistanceInUnits);
+	float GetDamageMultiplier(float DistanceInUnits);
 };

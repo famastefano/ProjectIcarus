@@ -1,16 +1,12 @@
-﻿#include "LogWeaponSystemTest.h"
-#include "DamageFalloffCurve.h"
-
+﻿#include "DamageFalloffCurve.h"
 #include "Algo/Compare.h"
-
-#include "Logging/StructuredLog.h"
 #include "Misc/AutomationTest.h"
 
 BEGIN_DEFINE_SPEC(FDamageFalloffCurve_Spec, "WeaponSystemPlugin.Runtime.DamageFalloffCurve",
                   EAutomationTestFlags::ApplicationContextMask
                   | EAutomationTestFlags::HighPriority | EAutomationTestFlags::ProductFilter)
 
-	FDamageFalloffCurve Curve;
+TObjectPtr<UDamageFalloffCurve> Curve;
 
 END_DEFINE_SPEC(FDamageFalloffCurve_Spec)
 
@@ -22,29 +18,30 @@ void FDamageFalloffCurve_Spec::Define()
 	{
 		BeforeEach([this]
 		{
-			Curve = {};
+			Curve = NewObject<UDamageFalloffCurve>();
+			Curve->AddToRoot();
 		});
 
 		Describe("If empty", [this]
 		{
 			It("Should be valid", [this]
 			{
-				TestTrueExpr(Curve.IsValid());
+				TestTrueExpr(Curve->IsValid());
 			});
 
 			It("Should return a scaling factor", [this]
 			{
-				TestTrueExpr(!FMath::IsNaN(Curve.GetScaledFactor(0)));
+				TestTrueExpr(!FMath::IsNaN(Curve->GetDamageMultiplier(0)));
 			});
 
 			It("Shoudlnt require to be sorted", [this]
 			{
-				TestTrueExpr(!Curve.IsSortingRequired());
+				TestTrueExpr(!Curve->IsSortingRequired());
 			});
 
 			It("Shouldnt raise errors when sorted", [this]
 			{
-				Curve.SortKeyPoints();
+				Curve->SortKeyPoints();
 			});
 		});
 
@@ -54,17 +51,17 @@ void FDamageFalloffCurve_Spec::Define()
 			{
 				TArray KeyPointsToInsert
 				{
-					FDamageFalloffKeypoint{.DamageScaling = 1, .DistanceInUnits = 1},
-					FDamageFalloffKeypoint{.DamageScaling = 2, .DistanceInUnits = 2},
-					FDamageFalloffKeypoint{.DamageScaling = 3, .DistanceInUnits = 3},
-					FDamageFalloffKeypoint{.DamageScaling = 4, .DistanceInUnits = 4},
+					FDamageFalloffKeypoint{.DamageMultiplier = 1, .Distance = 1},
+					FDamageFalloffKeypoint{.DamageMultiplier = 2, .Distance = 2},
+					FDamageFalloffKeypoint{.DamageMultiplier = 3, .Distance = 3},
+					FDamageFalloffKeypoint{.DamageMultiplier = 4, .Distance = 4},
 				};
 				auto begin = KeyPointsToInsert.rbegin();
 				auto end = KeyPointsToInsert.rend();
 				while (begin != end)
 				{
-					Curve.AddKeyPoint(*begin);
-					TestTrueExpr(!Curve.IsSortingRequired());
+					Curve->AddKeyPoint(*begin);
+					TestTrueExpr(!Curve->IsSortingRequired());
 					++begin;
 				}
 			});
@@ -73,55 +70,55 @@ void FDamageFalloffCurve_Spec::Define()
 			{
 				TArray KeyPointsToInsert
 				{
-					FDamageFalloffKeypoint{.DamageScaling = 1, .DistanceInUnits = 1},
-					FDamageFalloffKeypoint{.DamageScaling = 2, .DistanceInUnits = 2},
-					FDamageFalloffKeypoint{.DamageScaling = 3, .DistanceInUnits = 3},
-					FDamageFalloffKeypoint{.DamageScaling = 4, .DistanceInUnits = 4},
+					FDamageFalloffKeypoint{.DamageMultiplier = 1, .Distance = 1},
+					FDamageFalloffKeypoint{.DamageMultiplier = 2, .Distance = 2},
+					FDamageFalloffKeypoint{.DamageMultiplier = 3, .Distance = 3},
+					FDamageFalloffKeypoint{.DamageMultiplier = 4, .Distance = 4},
 				};
-				Curve.KeyPoints.Append(KeyPointsToInsert);
-				TestTrueExpr(!Curve.IsSortingRequired());
+				Curve->KeyPoints.Append(KeyPointsToInsert);
+				TestTrueExpr(!Curve->IsSortingRequired());
 			});
 
 			It("Should require sorting, if keypoints are inserted manually but without caring about the order", [this]
 			{
 				TArray KeyPointsToInsert
 				{
-					FDamageFalloffKeypoint{.DamageScaling = 4, .DistanceInUnits = 4},
-					FDamageFalloffKeypoint{.DamageScaling = 2, .DistanceInUnits = 2},
-					FDamageFalloffKeypoint{.DamageScaling = 1, .DistanceInUnits = 1},
-					FDamageFalloffKeypoint{.DamageScaling = 3, .DistanceInUnits = 3},
+					FDamageFalloffKeypoint{.DamageMultiplier = 4, .Distance = 4},
+					FDamageFalloffKeypoint{.DamageMultiplier = 2, .Distance = 2},
+					FDamageFalloffKeypoint{.DamageMultiplier = 1, .Distance = 1},
+					FDamageFalloffKeypoint{.DamageMultiplier = 3, .Distance = 3},
 				};
-				Curve.KeyPoints.Append(KeyPointsToInsert);
-				TestTrueExpr(Curve.IsSortingRequired());
+				Curve->KeyPoints.Append(KeyPointsToInsert);
+				TestTrueExpr(Curve->IsSortingRequired());
 			});
 
 			It("Should sort the element properly", [this]
 			{
 				TArray KeyPointsToInsert
 				{
-					FDamageFalloffKeypoint{.DamageScaling = 4, .DistanceInUnits = 4},
-					FDamageFalloffKeypoint{.DamageScaling = 2, .DistanceInUnits = 2},
-					FDamageFalloffKeypoint{.DamageScaling = 1, .DistanceInUnits = 1},
-					FDamageFalloffKeypoint{.DamageScaling = 3, .DistanceInUnits = 3},
+					FDamageFalloffKeypoint{.DamageMultiplier = 4, .Distance = 4},
+					FDamageFalloffKeypoint{.DamageMultiplier = 2, .Distance = 2},
+					FDamageFalloffKeypoint{.DamageMultiplier = 1, .Distance = 1},
+					FDamageFalloffKeypoint{.DamageMultiplier = 3, .Distance = 3},
 				};
 				TArray ExpectedKeyPoints
 				{
-					FDamageFalloffKeypoint{.DamageScaling = 1, .DistanceInUnits = 1},
-					FDamageFalloffKeypoint{.DamageScaling = 2, .DistanceInUnits = 2},
-					FDamageFalloffKeypoint{.DamageScaling = 3, .DistanceInUnits = 3},
-					FDamageFalloffKeypoint{.DamageScaling = 4, .DistanceInUnits = 4},
+					FDamageFalloffKeypoint{.DamageMultiplier = 1, .Distance = 1},
+					FDamageFalloffKeypoint{.DamageMultiplier = 2, .Distance = 2},
+					FDamageFalloffKeypoint{.DamageMultiplier = 3, .Distance = 3},
+					FDamageFalloffKeypoint{.DamageMultiplier = 4, .Distance = 4},
 				};
 
-				Curve.KeyPoints.Append(KeyPointsToInsert);
-				Curve.SortKeyPoints();
-				TestTrueExpr(!Curve.IsSortingRequired());
+				Curve->KeyPoints.Append(KeyPointsToInsert);
+				Curve->SortKeyPoints();
+				TestTrueExpr(!Curve->IsSortingRequired());
 				using FKeyPointConst = const FDamageFalloffKeypoint&;
-				bool AreExpectedKeyPoints = Algo::Compare(Curve.KeyPoints, ExpectedKeyPoints,
+				bool AreExpectedKeyPoints = Algo::Compare(Curve->KeyPoints, ExpectedKeyPoints,
 				                                          [](FKeyPointConst A, FKeyPointConst B)
 				                                          {
-					                                          return std::tie(A.DamageScaling, A.DistanceInUnits) ==
+					                                          return std::tie(A.DamageMultiplier, A.Distance) ==
 						                                          std::tie(
-							                                          B.DamageScaling, B.DistanceInUnits);
+							                                          B.DamageMultiplier, B.Distance);
 				                                          });
 				TestTrueExpr(AreExpectedKeyPoints);
 			});
@@ -130,58 +127,58 @@ void FDamageFalloffCurve_Spec::Define()
 			{
 				BeforeEach([this]
 				{
-					Curve.KeyPoints.Append(
+					Curve->KeyPoints.Append(
 						{
-							FDamageFalloffKeypoint{.DamageScaling = 1, .DistanceInUnits = 1},
-							FDamageFalloffKeypoint{.DamageScaling = 2, .DistanceInUnits = 2},
-							FDamageFalloffKeypoint{.DamageScaling = 3, .DistanceInUnits = 3},
-							FDamageFalloffKeypoint{.DamageScaling = 4, .DistanceInUnits = 4}
+							FDamageFalloffKeypoint{.DamageMultiplier = 1, .Distance = 1},
+							FDamageFalloffKeypoint{.DamageMultiplier = 2, .Distance = 2},
+							FDamageFalloffKeypoint{.DamageMultiplier = 3, .Distance = 3},
+							FDamageFalloffKeypoint{.DamageMultiplier = 4, .Distance = 4}
 						}
 					);
 				});
 
 				It("Should return zero, if Distance < First.Distance", [this]
 				{
-					const double Distance = Curve.KeyPoints[0].DistanceInUnits - 1;
-					TestTrueExpr(Curve.GetScaledFactor(Distance) == 0.0);
+					const double Distance = Curve->KeyPoints[0].Distance - 1;
+					TestTrueExpr(Curve->GetDamageMultiplier(Distance) == 0.0);
 				});
 
 				It("Should return First.Factor, if Distance == First.Distance", [this]
 				{
-					const auto& First = Curve.KeyPoints[0];
-					const double Factor = Curve.GetScaledFactor(First.DistanceInUnits);
-					TestTrueExpr(FMath::IsNearlyEqual(First.DamageScaling, Factor, FactorComparisonTolerance));
+					const auto& First = Curve->KeyPoints[0];
+					const double Factor = Curve->GetDamageMultiplier(First.Distance);
+					TestTrueExpr(FMath::IsNearlyEqual(First.DamageMultiplier, Factor, FactorComparisonTolerance));
 				});
 
 				It("Should return Lower.Factor, if Distance == Lower.Distance", [this]
 				{
-					const auto& Lower = Curve.KeyPoints[2];
-					const double Factor = Curve.GetScaledFactor(Lower.DistanceInUnits);
-					TestTrueExpr(FMath::IsNearlyEqual(Lower.DamageScaling, Factor, FactorComparisonTolerance));
+					const auto& Lower = Curve->KeyPoints[2];
+					const double Factor = Curve->GetDamageMultiplier(Lower.Distance);
+					TestTrueExpr(FMath::IsNearlyEqual(Lower.DamageMultiplier, Factor, FactorComparisonTolerance));
 				});
 
 				It("Should return Last.Factor, if Distance == Last.Distance", [this]
 				{
-					const auto& Last = Curve.KeyPoints.Last();
-					const double Factor = Curve.GetScaledFactor(Last.DistanceInUnits);
-					TestTrueExpr(FMath::IsNearlyEqual(Last.DamageScaling, Factor,FactorComparisonTolerance));
+					const auto& Last = Curve->KeyPoints.Last();
+					const double Factor = Curve->GetDamageMultiplier(Last.Distance);
+					TestTrueExpr(FMath::IsNearlyEqual(Last.DamageMultiplier, Factor,FactorComparisonTolerance));
 				});
 
 
 				It("Should return Last.Factor, if Distance > Last.Distance", [this]
 				{
-					const auto& Last = Curve.KeyPoints.Last();
-					const double Factor = Curve.GetScaledFactor(Last.DistanceInUnits + 1);
-					TestTrueExpr(FMath::IsNearlyEqual(Last.DamageScaling, Factor, FactorComparisonTolerance));
+					const auto& Last = Curve->KeyPoints.Last();
+					const double Factor = Curve->GetDamageMultiplier(Last.Distance + 1);
+					TestTrueExpr(FMath::IsNearlyEqual(Last.DamageMultiplier, Factor, FactorComparisonTolerance));
 				});
 
 				It("Should return the expected factor, if Distance is half the one between Lower and Upper", [this]
 				{
-					const auto& Lower = Curve.KeyPoints[2];
-					const auto& Upper = Curve.KeyPoints[3];
-					const float ExpectedFactor = (Lower.DamageScaling + Upper.DamageScaling) / 2;
-					const float Distance = (Lower.DistanceInUnits + Upper.DistanceInUnits) / 2;
-					const float ActualFactor = Curve.GetScaledFactor(Distance);
+					const auto& Lower = Curve->KeyPoints[2];
+					const auto& Upper = Curve->KeyPoints[3];
+					const float ExpectedFactor = (Lower.DamageMultiplier + Upper.DamageMultiplier) / 2;
+					const float Distance = (Lower.Distance + Upper.Distance) / 2;
+					const float ActualFactor = Curve->GetDamageMultiplier(Distance);
 					TestTrueExpr(FMath::IsNearlyEqual(ActualFactor, ExpectedFactor, FactorComparisonTolerance));
 				});
 
@@ -189,17 +186,23 @@ void FDamageFalloffCurve_Spec::Define()
 					"Should return the expected factor, if the Distance is scaled between [Lower, Upper] * Factor, Factor -> [0.0, 1.0]",
 					[this]
 					{
-						const auto& Lower = Curve.KeyPoints[1];
-						const auto& Upper = Curve.KeyPoints[2];
+						const auto& Lower = Curve->KeyPoints[1];
+						const auto& Upper = Curve->KeyPoints[2];
 						for (float Factor = 0.0; Factor <= 1.0; Factor += 0.1)
 						{
-							const float Distance = FMath::Lerp(Lower.DistanceInUnits, Upper.DistanceInUnits, Factor);
-							const float ExpectedFactor = FMath::Lerp(Lower.DamageScaling, Upper.DamageScaling, Factor);
-							const float ActualFactor = Curve.GetScaledFactor(Distance);
+							const float Distance = FMath::Lerp(Lower.Distance, Upper.Distance, Factor);
+							const float ExpectedFactor = FMath::Lerp(Lower.DamageMultiplier, Upper.DamageMultiplier,
+							                                         Factor);
+							const float ActualFactor = Curve->GetDamageMultiplier(Distance);
 							TestTrueExpr(FMath::IsNearlyEqual(ActualFactor, ExpectedFactor, FactorComparisonTolerance));
 						}
 					});
 			});
+		});
+
+		AfterEach([this]
+		{
+			Curve->RemoveFromRoot();
 		});
 	});
 }
