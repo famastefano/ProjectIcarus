@@ -38,6 +38,9 @@ public:
 	bool IsValid() const;
 	bool IsSortingRequired() const;
 	void AddKeyPoint(FDamageFalloffKeypoint Keypoint);
+
+	UFUNCTION(BlueprintCallable, CallInEditor)
 	void SortKeyPoints();
+	
 	float GetDamageMultiplier(float DistanceInUnits);
 };
