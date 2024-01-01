@@ -47,12 +47,22 @@ void UDamageFalloffCurve::AddKeyPoint(FDamageFalloffKeypoint Keypoint)
 	{
 		SortKeyPoints();
 	}
+#if WITH_EDITORONLY_DATA
+	else
+	{
+		(void)OnKeyPointsChanged.ExecuteIfBound();
+	}
+#endif
 }
 
 void UDamageFalloffCurve::SortKeyPoints()
 {
 	LastLowerBoundIndex = LastUpperBoundIndex = -1;
 	KeyPoints.Sort(TLess<FDamageFalloffKeypoint>{});
+
+#if WITH_EDITORONLY_DATA
+	(void)OnKeyPointsChanged.ExecuteIfBound();
+#endif
 }
 
 float UDamageFalloffCurve::GetDamageMultiplier(float DistanceInUnits)
