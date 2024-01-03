@@ -77,10 +77,7 @@ void UTestWorldSubsystem::Deinitialize()
 FTestWorldHelper UTestWorldSubsystem::GetPrivateWorld(FName Name)
 {
 	check(IsInGameThread());
-	if (const FTestWorldData* Data = PrivateWorlds.Find(Name))
-	{
-		return FTestWorldHelper{this, Data->World, false};
-	}
+	checkf(PrivateWorlds.Find(Name) == nullptr, TEXT("This test world has already been created"));
 
 	const auto& [GameInstance, World] = PrivateWorlds.Add(Name, MakeTestWorld(Name));
 	return FTestWorldHelper{this, World, false};
