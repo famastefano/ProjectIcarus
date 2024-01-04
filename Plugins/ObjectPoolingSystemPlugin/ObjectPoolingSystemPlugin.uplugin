@@ -1,23 +1,31 @@
 ﻿{
-  "FileVersion": 3,
-  "Version": 1,
-  "VersionName": "1.0",
-  "FriendlyName": "ObjectPoolingSystemPlugin",
-  "Description": "System to manage pools of any object",
-  "Category": "Other",
-  "CreatedBy": "Stefano Famà",
-  "CreatedByURL": "",
-  "DocsURL": "",
-  "MarketplaceURL": "",
-  "CanContainContent": true,
-  "IsBetaVersion": false,
-  "IsExperimentalVersion": false,
-  "Installed": false,
-  "Modules": [
-    {
-      "Name": "ObjectPoolingSystemPlugin",
-      "Type": "Runtime",
-      "LoadingPhase": "Default"
-    }
-  ]
+	"FileVersion": 3,
+	"Version": 1,
+	"VersionName": "1.0",
+	"FriendlyName": "ObjectPoolingSystemPlugin",
+	"Description": "System to manage pools of any object",
+	"Category": "Other",
+	"CreatedBy": "Stefano Famà",
+	"CreatedByURL": "",
+	"DocsURL": "",
+	"MarketplaceURL": "",
+	"CanContainContent": true,
+	"IsBetaVersion": false,
+	"IsExperimentalVersion": false,
+	"Installed": false,
+	"Modules": [
+		{
+			"Name": "ObjectPoolingSystemPlugin",
+			"Type": "Runtime",
+			"LoadingPhase": "Default"
+		},
+		{
+			"Name": "ObjectPoolingSystemTest",
+			"Type": "DeveloperTool",
+			"LoadingPhase": "Default",
+			"BlacklistTargetConfigurations": [
+				"Shipping"
+			]
+		}
+	]
 }
