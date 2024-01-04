@@ -36,8 +36,8 @@ public:
 	//                    = false : always spawns a new Actor.
 	static AActor* SpawnOrAcquireFromPool(const UObject* WorldContextObject,
 	                                      TSubclassOf<AActor> ActorClass,
-	                                      const FTransform& SpawnTransform,
-	                                      const FActorSpawnParameters& SpawnParams);
+	                                      const FTransform& SpawnTransform = FTransform::Identity,
+	                                      const FActorSpawnParameters& SpawnParams = {});
 
 	// IsPoolingEnabled() = true  : Actor->EndPlay(Destroyed), then adds it to the pool.
 	//                    = false : Actor->Destroy()
