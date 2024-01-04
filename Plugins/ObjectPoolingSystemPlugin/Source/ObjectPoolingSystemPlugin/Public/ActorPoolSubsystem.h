@@ -3,6 +3,8 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "PoolStats.h"
+
 #include "Subsystems/WorldSubsystem.h"
 #include "ActorPoolSubsystem.generated.h"
 
@@ -40,4 +42,10 @@ public:
 	// IsPoolingEnabled() = true  : Actor->EndPlay(Destroyed), then adds it to the pool.
 	//                    = false : Actor->Destroy()
 	static void DestroyOrReleaseToPool(const UObject* WorldContextObject, AActor*& Actor);
+
+	static void EmptyPool(const UObject* WorldContextObject, TSubclassOf<AActor> ActorClass);
+	static void EmptyPools(const UObject* WorldContextObject);
+
+	static TArray<FPoolStats> GetAllPoolStats(const UObject* WorldContextObject);
+	static FPoolStats GetPoolStats(const UObject* WorldContextObject, TSubclassOf<AActor> ActorClass);
 };

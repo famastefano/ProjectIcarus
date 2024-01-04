@@ -101,3 +101,66 @@ void UActorPoolSubsystem::DestroyOrReleaseToPool(const UObject* WorldContextObje
 		Actor->Destroy();
 	}
 }
+
+void UActorPoolSubsystem::EmptyPool(const UObject* WorldContextObject, TSubclassOf<AActor> ActorClass)
+{
+	check(WorldContextObject);
+	UActorPoolSubsystem* Subsystem = WorldContextObject->GetWorld()->GetSubsystem<UActorPoolSubsystem>();
+	if (FActorPool* Pool = Subsystem->Pools.Find(ActorClass))
+	{
+		for (AActor* Actor : Pool->FreeActors)
+		{
+			Actor->Destroy();
+		}
+		Subsystem->Pools.Remove(ActorClass);
+	}
+}
+
+void UActorPoolSubsystem::EmptyPools(const UObject* WorldContextObject)
+{
+	check(WorldContextObject);
+	UActorPoolSubsystem* Subsystem = WorldContextObject->GetWorld()->GetSubsystem<UActorPoolSubsystem>();
+	for (auto& [Class, Pool] : Subsystem->Pools)
+	{
+		for (AActor* Actor : Pool.FreeActors)
+		{
+			Actor->Destroy();
+		}
+	}
+	Subsystem->Pools.Empty();
+}
+
+TArray<FPoolStats> UActorPoolSubsystem::GetAllPoolStats(const UObject* WorldContextObject)
+{
+	check(WorldContextObject);
+	UActorPoolSubsystem* Subsystem = WorldContextObject->GetWorld()->GetSubsystem<UActorPoolSubsystem>();
+	TArray<FPoolStats> PoolStatistics;
+	PoolStatistics.Reserve(Subsystem->Pools.Num());
+	for (const auto& [Class, Pool] : Subsystem->Pools)
+	{
+		FPoolStats Stats;
+		Stats.TypeClass = Class;
+		Stats.NumberOfPooledObjects = Pool.FreeActors.Num();
+		Stats.TotalPoolCapacity = Pool.FreeActors.GetSlack() + Stats.NumberOfPooledObjects;
+		Stats.TotalPoolAllocatedSize = Pool.FreeActors.GetAllocatedSize();
+		PoolStatistics.Add(Stats);
+	}
+	return PoolStatistics;
+}
+
+FPoolStats UActorPoolSubsystem::GetPoolStats(const UObject* WorldContextObject, TSubclassOf<AActor> ActorClass)
+{
+	check(WorldContextObject);
+	check(ActorClass);
+	UActorPoolSubsystem* Subsystem = WorldContextObject->GetWorld()->GetSubsystem<UActorPoolSubsystem>();
+	if (FActorPool* Pool = Subsystem->Pools.Find(ActorClass))
+	{
+		FPoolStats Stats;
+		Stats.TypeClass = ActorClass;
+		Stats.NumberOfPooledObjects = Pool->FreeActors.Num();
+		Stats.TotalPoolCapacity = Pool->FreeActors.GetSlack() + Stats.NumberOfPooledObjects;
+		Stats.TotalPoolAllocatedSize = Pool->FreeActors.GetAllocatedSize();
+		return Stats;
+	}
+	return {};
+}
