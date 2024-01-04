@@ -46,19 +46,18 @@ void UActorPoolSubsystem::PopulatePool(const UObject* WorldContextObject, TSubcl
 	FActorSpawnParameters Params;
 	Params.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
 
-	TArray<FPooledActor> PooledActors;
+	TArray<AActor*> PooledActors;
 	PooledActors.Reserve(Count);
 	for (int32 SpawnedActors = 0; SpawnedActors < Count; ++SpawnedActors)
 	{
 		if (AActor* Actor = World->SpawnActor<AActor>(ActorClass, FTransform::Identity, Params))
 		{
-			Actor->RouteEndPlay(EEndPlayReason::Destroyed);
-			PooledActors.Add(FPooledActor{Actor, false});
+			PooledActors.Add(Actor);
 		}
 	}
 
 	UActorPoolSubsystem* Subsystem = WorldContextObject->GetWorld()->GetSubsystem<UActorPoolSubsystem>();
-	Subsystem->Pools.FindOrAdd(ActorClass).Pool.Append(PooledActors);
+	Subsystem->Pools.FindOrAdd(ActorClass).FreeActors.Append(PooledActors);
 }
 
 AActor* UActorPoolSubsystem::SpawnOrAcquireFromPool(
@@ -73,53 +72,32 @@ AActor* UActorPoolSubsystem::SpawnOrAcquireFromPool(
 	UWorld* World = WorldContextObject->GetWorld();
 	check(World);
 
-	if (UNLIKELY(!IsPoolingEnabled()))
+	if (LIKELY(IsPoolingEnabled()))
 	{
-		AActor* Actor = World->SpawnActor<AActor>(ActorClass, SpawnTransform, SpawnParams);
-		return Actor;
+		UActorPoolSubsystem* Subsystem = World->GetSubsystem<UActorPoolSubsystem>();
+		if (FActorPool* Pool = Subsystem->Pools.Find(ActorClass); Pool && !Pool->FreeActors.IsEmpty())
+		{
+			AActor* Actor = Pool->FreeActors.Pop(false);
+			Actor->SetActorTransform(SpawnTransform);
+			Actor->SetOwner(SpawnParams.Owner);
+			Actor->DispatchBeginPlay();
+			return Actor;
+		}
 	}
-
-	UActorPoolSubsystem* Subsystem = World->GetSubsystem<UActorPoolSubsystem>();
-	auto& [Pool] = Subsystem->Pools.FindOrAdd(ActorClass);
-	if (auto* PooledActor = Pool.FindByPredicate([](const FPooledActor& Actor) { return !Actor.IsActive; }))
-	{
-		PooledActor->IsActive = true;
-		auto* Actor = PooledActor->Actor;
-		Actor->SetActorTransform(SpawnTransform);
-		Actor->SetOwner(SpawnParams.Owner);
-		Actor->DispatchBeginPlay();
-		return Actor;
-	}
-
-	auto* Actor = World->SpawnActor<AActor>(ActorClass, SpawnTransform, SpawnParams);
-	if (Actor)
-	{
-		Pool.Add(FPooledActor{Actor, true});
-	}
-	return Actor;
+	return World->SpawnActor<AActor>(ActorClass, SpawnTransform, SpawnParams);
 }
 
 void UActorPoolSubsystem::DestroyOrReleaseToPool(const UObject* WorldContextObject, AActor*& Actor)
 {
-	if (UNLIKELY(!IsPoolingEnabled()))
+	if (LIKELY(IsPoolingEnabled()))
 	{
-		Actor->Destroy();
-		return;
-	}
-
-	Actor->RouteEndPlay(EEndPlayReason::Destroyed);
-	UActorPoolSubsystem* Subsystem = WorldContextObject->GetWorld()->GetSubsystem<UActorPoolSubsystem>();
-	auto& [Pool] = Subsystem->Pools.FindOrAdd(Actor->GetClass());
-	auto* PooledActor = Pool.FindByPredicate([Actor](const FPooledActor& PooledActor)
-	{
-		return PooledActor.Actor == Actor;
-	});
-	if (PooledActor)
-	{
-		PooledActor->IsActive = false;
+		Actor->RouteEndPlay(EEndPlayReason::Destroyed);
+		UActorPoolSubsystem* Subsystem = WorldContextObject->GetWorld()->GetSubsystem<UActorPoolSubsystem>();
+		auto& [Pool] = Subsystem->Pools.FindOrAdd(Actor->GetClass());
+		Pool.Add(Actor);
 	}
 	else
 	{
-		Pool.Add(FPooledActor{Actor, false});
+		Actor->Destroy();
 	}
 }

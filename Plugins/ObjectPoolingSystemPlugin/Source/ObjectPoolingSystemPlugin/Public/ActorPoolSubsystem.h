@@ -7,21 +7,12 @@
 #include "ActorPoolSubsystem.generated.h"
 
 USTRUCT()
-struct FPooledActor
-{
-	GENERATED_BODY()
-
-	UPROPERTY()
-	AActor* Actor;
-	bool IsActive;
-};
-
-USTRUCT()
 struct FActorPool
 {
 	GENERATED_BODY()
 
-	TArray<FPooledActor> Pool;
+	UPROPERTY()
+	TArray<AActor*> FreeActors;
 };
 
 UCLASS()
