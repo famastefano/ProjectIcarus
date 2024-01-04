@@ -28,6 +28,7 @@ FTestWorldHelper::FTestWorldHelper(FTestWorldHelper&& Other) noexcept : Subsyste
 
 FTestWorldHelper& FTestWorldHelper::operator=(FTestWorldHelper&& Other) noexcept
 {
+	Subsystem = Other.Subsystem;
 	World = std::exchange(Other.World, nullptr);
 	IsSharedWorld = std::exchange(Other.IsSharedWorld, false);
 	OldGFrameCounter = Other.OldGFrameCounter;
