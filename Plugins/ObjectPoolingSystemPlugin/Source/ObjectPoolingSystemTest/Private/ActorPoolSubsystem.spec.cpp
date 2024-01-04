@@ -264,16 +264,57 @@ void FActorPoolSubsystem_Spec::Define()
 				});
 		});
 
+		Describe("When releasing actors to the pool", [this]
+		{
+			It("Should increase the pool size by N, if the pool were empty", [this]
+			{
+				UClass* ActorClass = ATestWorldActor::StaticClass();
+				int32 Count = GetRandomValue();
+
+				auto AllStats = UActorPoolSubsystem::GetAllPoolStats(WorldContextObject);
+				TestTrueExpr(AllStats.IsEmpty());
+
+				for (int32 Iterations = 0; Iterations < Count; ++Iterations)
+				{
+					AActor* Actor = World->SpawnActor<AActor>(ActorClass);
+					UActorPoolSubsystem::DestroyOrReleaseToPool(WorldContextObject, Actor);
+				}
+
+				auto Stats = UActorPoolSubsystem::GetPoolStats(WorldContextObject, ActorClass);
+				TestTrueExpr(Stats.TypeClass == ActorClass);
+				TestTrueExpr(Stats.NumberOfPooledObjects == Count);
+			});
+
+			It("Should increase the pool size by N, if the pool were empty, for each pool", [this]
+			{
+				TArray ActorClasses{
+					ClassPair{ATestWorldActor::StaticClass(), GetRandomValue()},
+					ClassPair{APoolTestActor_Alice::StaticClass(), GetRandomValue()},
+					ClassPair{APoolTestActor_Bob::StaticClass(), GetRandomValue()},
+				};
+
+				auto AllStats = UActorPoolSubsystem::GetAllPoolStats(WorldContextObject);
+				TestTrueExpr(AllStats.IsEmpty());
+
+				for (auto [ActorClass, Count] : ActorClasses)
+				{
+					for (int32 Iterations = 0; Iterations < Count; ++Iterations)
+					{
+						AActor* Actor = World->SpawnActor<AActor>(ActorClass);
+						UActorPoolSubsystem::DestroyOrReleaseToPool(WorldContextObject, Actor);
+					}
+
+					auto Stats = UActorPoolSubsystem::GetPoolStats(WorldContextObject, ActorClass);
+					TestTrueExpr(Stats.TypeClass == ActorClass);
+					TestTrueExpr(Stats.NumberOfPooledObjects == Count);
+				}
+			});
+		});
+
 		/*
 		 * DestroyOrReleaseToPool:
-		 *   - Empty Pool, 1 class, Stats = N Actors available
-		 *   - Empty Pool, N classes, Stats = N Actors available for each of the M pools
 		 *   - With Pool, 1 class, Stats = N+M Actors available, N = new released, M = existing released
 		 *   - With Pool, N class, Stats = N+M Actors available for each of the M pools, N = new released, M = existing released
-		 *
-		 * Acq+Rel:
-		 *	 - Repeatedly acquire 1 Actor and release it to the Pool, it shall have the same address each time
-		 *	 - Repeatedly acquiring N actors and release them to the Pool, each acquired Actor shall have one of the previously released addresses 
 		 */
 
 		AfterEach([this]
