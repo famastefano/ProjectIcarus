@@ -76,10 +76,6 @@ BEGIN_DEFINE_SPEC(FBallisticWeaponComponent_Spec, "WeaponSystemPlugin.Runtime.Ba
 		PrevComponent->ShotsFiredDuringBurstFire = Options.ShotsFiredDuringBurstFire;
 		PrevComponent->SecondsToReload = Options.SecondsToReload;
 		PrevComponent->AmmoType = Options.AmmoType;
-		if (!PrevComponent->AmmoType.DamageFalloffCurve)
-		{
-			PrevComponent->AmmoType.DamageFalloffCurve = NewObject<UDamageFalloffCurve>(PrevComponent);
-		}
 
 		Actor->FinishAddComponent(PrevComponent, false, FTransform::Identity);
 		DelegateHandler->Register(PrevComponent);

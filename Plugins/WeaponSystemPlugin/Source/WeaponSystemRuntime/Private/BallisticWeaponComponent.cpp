@@ -256,9 +256,7 @@ void UBallisticWeaponComponent::Fire()
 			{
 				AActor* Owner = GetOwner();
 				const FDamageEvent DamageEvent{AmmoType.DamageType};
-
-				const float DamageScaleFactor = AmmoType.DamageFalloffCurve->GetDamageMultiplier(HitResult.Distance);
-				const float DamageValue = AmmoType.DamageAmount * DamageScaleFactor;
+				const float DamageValue = AmmoType.Damage.GetValueAtLevel(HitResult.Distance);
 
 				// ReSharper disable CppDefaultCaseNotHandledInSwitchStatement
 				switch (ShotsToFire)

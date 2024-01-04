@@ -9,7 +9,8 @@ public class WeaponSystemRuntime : ModuleRules
         PublicDependencyModuleNames.AddRange(
             new[]
             {
-                "Core"
+                "Core",
+                "GameplayAbilities"
             }
         );
 

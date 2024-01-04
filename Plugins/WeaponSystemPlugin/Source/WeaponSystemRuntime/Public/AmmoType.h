@@ -3,7 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "DamageFalloffCurve.h"
+#include "ScalableFloat.h"
 #include "AmmoType.generated.h"
 
 /**
@@ -23,13 +23,9 @@ struct WEAPONSYSTEMRUNTIME_API FAmmoType
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Ammunition", meta=(EditCondition="IsHitScan"))
 	TEnumAsByte<ECollisionChannel> CollisionChannel = TEnumAsByte(ECC_Visibility);
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Damage",
-		meta=(EditCondition="IsHitScan", UIMin=0, ClampMin=0))
-	float DamageAmount = 0;
-
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Damage", meta=(EditCondition="IsHitScan"))
 	TSubclassOf<UDamageType> DamageType;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Damage", meta=(EditCondition="IsHitScan"))
-	TObjectPtr<UDamageFalloffCurve> DamageFalloffCurve;
+	FScalableFloat Damage; 
 };
