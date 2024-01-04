@@ -94,6 +94,9 @@ void UActorPoolSubsystem::DestroyOrReleaseToPool(const UObject* WorldContextObje
 		Actor->RouteEndPlay(EEndPlayReason::Destroyed);
 		UActorPoolSubsystem* Subsystem = WorldContextObject->GetWorld()->GetSubsystem<UActorPoolSubsystem>();
 		auto& [Pool] = Subsystem->Pools.FindOrAdd(Actor->GetClass());
+#if !UE_BUILD_SHIPPING
+		checkf(!Pool.Contains(Actor), TEXT("Actor already released to the pool!"));
+#endif
 		Pool.Add(Actor);
 	}
 	else
