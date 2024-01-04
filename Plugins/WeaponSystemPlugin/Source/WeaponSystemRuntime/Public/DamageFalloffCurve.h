@@ -15,10 +15,10 @@ struct FDamageFalloffKeypoint
 	GENERATED_BODY()
 
 	UPROPERTY(EditAnywhere, meta=(UIMin=0, ClampMin=0, Units="Percent"))
-	float DamageMultiplier;
+	float DamageMultiplier = 0;
 
 	UPROPERTY(EditAnywhere, meta=(UIMin=0, ClampMin=0, Units="Meters"))
-	float Distance;
+	float Distance = 0;
 };
 
 UCLASS(Blueprintable, BlueprintType)
