@@ -251,7 +251,7 @@ void UBallisticWeaponComponent::Fire()
 			UE_LOGFMT(LogWeaponSystem, Verbose, "Hit {Actor}, {Distance} cm far",
 			          HitResult.GetActor()->GetName(),
 			          HitResult.Distance);
-
+			
 			if (AActor* ActorHit = HitResult.GetActor(); ActorHit && ActorHit->CanBeDamaged())
 			{
 				AActor* Owner = GetOwner();
@@ -281,7 +281,13 @@ void UBallisticWeaponComponent::Fire()
 			UE_LOGFMT(LogWeaponSystem, Error, "AmmoType can't fire a projectile if ProjectileClass isn't set!");
 		}
 #endif
-		// TODO: Spawn Projectile Component
+		check(AmmoType.ProjectileClass);
+		// TODO: Spawn Projectile Component from Actor Pool
+		FActorSpawnParameters SpawnParameters{};
+		SpawnParameters.Owner = GetOwner();
+		SpawnParameters.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
+		GetWorld()->SpawnActor<AProjectileBase>(MuzzleLocation, MuzzleDirection.ToOrientationRotator(),
+		                                        SpawnParameters);
 	}
 
 	StatusNotificationQueue.NotifyOnShotFired |= 1;

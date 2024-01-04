@@ -3,6 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "ProjectileBase.h"
 #include "ScalableFloat.h"
 #include "AmmoType.generated.h"
 
@@ -18,7 +19,7 @@ struct WEAPONSYSTEMRUNTIME_API FAmmoType
 	bool IsHitScan = false;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Ammunition", meta=(EditCondition="!IsHitScan"))
-	TSubclassOf<UObject> ProjectileClass;
+	TSubclassOf<AProjectileBase> ProjectileClass;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Ammunition", meta=(EditCondition="IsHitScan"))
 	TEnumAsByte<ECollisionChannel> CollisionChannel = TEnumAsByte(ECC_Visibility);
