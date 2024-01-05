@@ -309,13 +309,53 @@ void FActorPoolSubsystem_Spec::Define()
 					TestTrueExpr(Stats.NumberOfPooledObjects == Count);
 				}
 			});
-		});
 
-		/*
-		 * DestroyOrReleaseToPool:
-		 *   - With Pool, 1 class, Stats = N+M Actors available, N = new released, M = existing released
-		 *   - With Pool, N class, Stats = N+M Actors available for each of the M pools, N = new released, M = existing released
-		 */
+			It("Should increase the pool size by N, with an existing pool", [this]
+			{
+				UClass* ActorClass = ATestWorldActor::StaticClass();
+				int32 InitialPoolSize = GetRandomValue();
+				int32 NewlyInsertedActors = GetRandomValue();
+
+				UActorPoolSubsystem::PopulatePool(WorldContextObject, ActorClass, InitialPoolSize);
+
+				for (int Iteration = 0; Iteration < NewlyInsertedActors; ++Iteration)
+				{
+					AActor* Actor = World->SpawnActor<AActor>(ActorClass);
+					UActorPoolSubsystem::DestroyOrReleaseToPool(WorldContextObject, Actor);
+				}
+
+				auto Stats = UActorPoolSubsystem::GetPoolStats(WorldContextObject, ActorClass);
+				TestTrueExpr(Stats.TypeClass == ActorClass);
+				TestTrueExpr(Stats.NumberOfPooledObjects == InitialPoolSize+NewlyInsertedActors);
+			});
+
+			It("Should increase the pool size by N, with an existing pool, for each pool", [this]
+			{
+				TArray ActorClasses{
+					ClassPair{ATestWorldActor::StaticClass(), GetRandomValue()},
+					ClassPair{APoolTestActor_Alice::StaticClass(), GetRandomValue()},
+					ClassPair{APoolTestActor_Bob::StaticClass(), GetRandomValue()},
+				};
+				int32 InitialPoolSize = GetRandomValue();
+
+				for (auto [ActorClass, NewlyInsertedActors] : ActorClasses)
+				{
+					UActorPoolSubsystem::PopulatePool(WorldContextObject, ActorClass, InitialPoolSize);
+					for (int Iteration = 0; Iteration < NewlyInsertedActors; ++Iteration)
+					{
+						AActor* Actor = World->SpawnActor<AActor>(ActorClass);
+						UActorPoolSubsystem::DestroyOrReleaseToPool(WorldContextObject, Actor);
+					}
+				}
+
+				for (auto [ActorClass, NewlyInsertedActors] : ActorClasses)
+				{
+					auto Stats = UActorPoolSubsystem::GetPoolStats(WorldContextObject, ActorClass);
+					TestTrueExpr(Stats.TypeClass == ActorClass);
+					TestTrueExpr(Stats.NumberOfPooledObjects == InitialPoolSize + NewlyInsertedActors);
+				}
+			});
+		});
 
 		AfterEach([this]
 		{
