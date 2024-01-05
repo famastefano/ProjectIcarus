@@ -3,6 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "PoolableActor.h"
 #include "ScalableFloat.h"
 
 #include "GameFramework/Actor.h"
@@ -11,9 +12,12 @@
 #include "ProjectileBase.generated.h"
 
 UCLASS(Abstract, Blueprintable, BlueprintType)
-class WEAPONSYSTEMPLUGIN_API AProjectileBase : public AActor
+class WEAPONSYSTEMPLUGIN_API AProjectileBase : public AActor, public IPoolableActor
 {
 	GENERATED_BODY()
+
+	float InitialSpeed;
+	bool IsActorHiddenAtBeginPlay;
 
 public:
 	AProjectileBase();
@@ -33,9 +37,9 @@ public:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="Damage")
 	TSubclassOf<UDamageType> DamageType;
 
-	virtual void PostInitializeComponents() override;
 	virtual void BeginPlay() override;
-	virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
+	virtual void AcquiredFromPool(const FTransform& NewTransform, AActor* NewOwner) override;
+	virtual void ReleasedToPool() override;
 
 #if WITH_EDITORONLY_DATA
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Debug")

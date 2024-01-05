@@ -6,14 +6,14 @@
 #include "UObject/Interface.h"
 #include "PoolableObject.generated.h"
 
-UINTERFACE(MinimalAPI)
+UINTERFACE()
 class UPoolableObject : public UInterface
 {
 	GENERATED_BODY()
 };
 
 /**
- * Any poolable UObject shall inherit this interface to be notified when they are transfered from/to the pool.
+ * Any poolable UObject shall inherit this interface to be notified when they are transferred from/to the pool.
  * For AActors, BeginPlay and EndPlay will be used to avoid rewriting additional code.
  */
 class OBJECTPOOLINGSYSTEMPLUGIN_API IPoolableObject
@@ -21,9 +21,11 @@ class OBJECTPOOLINGSYSTEMPLUGIN_API IPoolableObject
 	GENERATED_BODY()
 
 public:
-	UFUNCTION(BlueprintImplementableEvent)
-	void AcquiredFromPool();
+	virtual void AcquiredFromPool()
+	{
+	}
 
-	UFUNCTION(BlueprintImplementableEvent)
-	void ReleasedToPool();
+	virtual void ReleasedToPool()
+	{
+	}
 };

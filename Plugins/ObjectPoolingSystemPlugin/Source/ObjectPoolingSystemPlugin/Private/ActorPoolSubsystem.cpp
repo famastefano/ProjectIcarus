@@ -4,6 +4,7 @@
 #include "ActorPoolSubsystem.h"
 
 #include "LogObjectPoolingSystem.h"
+#include "PoolableActor.h"
 
 #include "Logging/StructuredLog.h"
 
@@ -110,9 +111,10 @@ AActor* UActorPoolSubsystem::SpawnOrAcquireFromPool(
 				          ActorClass->GetName());
 			}
 
-			Actor->SetActorTransform(SpawnTransform, false, nullptr, ETeleportType::TeleportPhysics);
-			Actor->SetOwner(SpawnParams.Owner);
-			Actor->DispatchBeginPlay();
+			if (IPoolableActor* PoolableActor = Cast<IPoolableActor>(Actor))
+			{
+				PoolableActor->AcquiredFromPool(SpawnTransform, SpawnParams.Owner);
+			}
 			return Actor;
 		}
 	}
@@ -132,7 +134,10 @@ void UActorPoolSubsystem::DestroyOrReleaseToPool(UWorld* World, AActor* Actor)
 
 	if (LIKELY(IsPoolingEnabled()))
 	{
-		Actor->RouteEndPlay(EEndPlayReason::Destroyed);
+		if (IPoolableActor* PoolableActor = Cast<IPoolableActor>(Actor))
+		{
+			PoolableActor->ReleasedToPool();
+		}
 		UActorPoolSubsystem* Subsystem = World->GetSubsystem<UActorPoolSubsystem>();
 		auto& [Pool] = Subsystem->Pools.FindOrAdd(Actor->GetClass());
 		checkfSlow(!Pool.Contains(Actor), TEXT("Actor already released to the pool!"));

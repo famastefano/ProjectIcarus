@@ -29,30 +29,51 @@ AProjectileBase::AProjectileBase()
 	ProjectileMovementComponent->UpdatedComponent = RootComponent;
 }
 
-void AProjectileBase::PostInitializeComponents()
+void AProjectileBase::BeginPlay()
 {
-	Super::PostInitializeComponents();
+	InitialSpeed = ProjectileMovementComponent->InitialSpeed;
+	IsActorHiddenAtBeginPlay = IsHidden();
+	AcquiredFromPool(GetActorTransform(), GetOwner());
+	Super::BeginPlay();
 }
 
-void AProjectileBase::BeginPlay()
+void AProjectileBase::AcquiredFromPool(const FTransform& NewTransform, AActor* NewOwner)
 {
 	if (EnableSpawnOffsetToAvoidWeaponCollision)
 	{
 		const double Offset = ProjectileMeshComponent->Bounds.SphereRadius + 1.f;
-		const FVector InitialLocation = GetActorLocation();
-		const FVector NewLocation = InitialLocation + GetActorForwardVector() * Offset;
-		SetActorLocation(NewLocation, false, nullptr, ETeleportType::TeleportPhysics);
+		const FVector InitialLocation = NewTransform.GetLocation();
+		const FVector NewLocation = InitialLocation + NewTransform.GetRotation().GetForwardVector() * Offset;
+
+		FTransform TransformWithOffset = NewTransform;
+		TransformWithOffset.SetLocation(NewLocation);
+		SetActorTransform(TransformWithOffset, false, nullptr, ETeleportType::TeleportPhysics);
 	}
+	else
+	{
+		SetActorTransform(NewTransform, false, nullptr, ETeleportType::TeleportPhysics);
+	}
+
+	SetOwner(NewOwner);
 	SpawnLocation = GetActorLocation();
-	UE_LOGFMT(LogWeaponSystem, Display, "BeginPlay {Vector}", SpawnLocation.ToString());
 	OnActorBeginOverlap.AddDynamic(this, &AProjectileBase::OnActorOverlap);
-	Super::BeginPlay();
+	SetActorEnableCollision(true);
+	SetActorHiddenInGame(IsActorHiddenAtBeginPlay);
+	if (ProjectileMovementComponent->HasStoppedSimulation())
+	{
+		const FVector Velocity = GetActorForwardVector() * InitialSpeed;
+		ProjectileMovementComponent->Velocity = ProjectileMovementComponent->ComputeVelocity(Velocity, 0);
+		ProjectileMovementComponent->SetUpdatedComponent(RootComponent);
+		ProjectileMovementComponent->SetActive(true);
+	}
 }
 
-void AProjectileBase::EndPlay(const EEndPlayReason::Type EndPlayReason)
+void AProjectileBase::ReleasedToPool()
 {
+	ProjectileMovementComponent->StopSimulating({});
+	SetActorEnableCollision(false);
+	SetActorHiddenInGame(true);
 	OnActorBeginOverlap.RemoveDynamic(this, &AProjectileBase::OnActorOverlap);
-	Super::EndPlay(EndPlayReason);
 }
 
 float AProjectileBase::CalculateDamage_Implementation(double TotalTraveledDistance, AActor* ActorToDamage)

@@ -12,7 +12,8 @@ public class WeaponSystemPlugin : ModuleRules
 			new[]
 			{
 				"Core",
-				"GameplayAbilities"
+				"GameplayAbilities",
+				"ObjectPoolingSystemPlugin"
 			}
 		);
 
@@ -20,8 +21,7 @@ public class WeaponSystemPlugin : ModuleRules
 			new[]
 			{
 				"CoreUObject",
-				"Engine",
-				"ObjectPoolingSystemPlugin"
+				"Engine"
 			}
 		);
 
