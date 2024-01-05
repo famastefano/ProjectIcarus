@@ -20,7 +20,8 @@ public class WeaponSystemPlugin : ModuleRules
 			new[]
 			{
 				"CoreUObject",
-				"Engine"
+				"Engine",
+				"ObjectPoolingSystemPlugin"
 			}
 		);
 

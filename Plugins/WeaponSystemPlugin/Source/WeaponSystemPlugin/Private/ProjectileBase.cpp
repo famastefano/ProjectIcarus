@@ -4,6 +4,8 @@
 
 #include "Engine/DamageEvents.h"
 
+#include "ActorPoolSubsystem.h"
+
 AProjectileBase::AProjectileBase()
 {
 	PrimaryActorTick.bCanEverTick = true;
@@ -47,7 +49,7 @@ void AProjectileBase::OnActorOverlap_Implementation(AActor* OverlappedActor, AAc
 
 		if (ShouldDestroyAfterOverlap())
 		{
-			Destroy(); // TODO: Instead of destroying, it should return to the projectile pool
+			UActorPoolSubsystem::DestroyOrReleaseToPool(this, this);
 		}
 	}
 }

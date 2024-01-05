@@ -41,7 +41,7 @@ public:
 
 	// IsPoolingEnabled() = true  : Actor->EndPlay(Destroyed), then adds it to the pool.
 	//                    = false : Actor->Destroy()
-	static void DestroyOrReleaseToPool(const UObject* WorldContextObject, AActor*& Actor);
+	static void DestroyOrReleaseToPool(const UObject* WorldContextObject, AActor* Actor);
 
 	static void EmptyPool(const UObject* WorldContextObject, TSubclassOf<AActor> ActorClass);
 	static void EmptyPools(const UObject* WorldContextObject);

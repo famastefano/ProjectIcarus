@@ -87,8 +87,10 @@ AActor* UActorPoolSubsystem::SpawnOrAcquireFromPool(
 	return World->SpawnActor<AActor>(ActorClass, SpawnTransform, SpawnParams);
 }
 
-void UActorPoolSubsystem::DestroyOrReleaseToPool(const UObject* WorldContextObject, AActor*& Actor)
+void UActorPoolSubsystem::DestroyOrReleaseToPool(const UObject* WorldContextObject, AActor* Actor)
 {
+	checkf(Actor, TEXT("Tried to insert nullptr to the pool."));
+	
 	if (LIKELY(IsPoolingEnabled()))
 	{
 		Actor->RouteEndPlay(EEndPlayReason::Destroyed);

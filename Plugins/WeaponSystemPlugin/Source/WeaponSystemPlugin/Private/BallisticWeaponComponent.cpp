@@ -14,6 +14,8 @@
 
 #include "ProfilingDebugging/MiscTrace.h"
 
+#include "ActorPoolSubsystem.h"
+
 UBallisticWeaponComponent::UBallisticWeaponComponent()
 {
 	bAllowReregistration = true;
@@ -282,12 +284,17 @@ void UBallisticWeaponComponent::Fire()
 		}
 #endif
 		check(AmmoType.ProjectileClass);
-		// TODO: Spawn Projectile Component from Actor Pool
+
+		FTransform ProjectileTransform;
+		ProjectileTransform.SetLocation(MuzzleLocation);
+		ProjectileTransform.SetRotation(MuzzleDirection.ToOrientationQuat());
+		
 		FActorSpawnParameters SpawnParameters{};
 		SpawnParameters.Owner = GetOwner();
 		SpawnParameters.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
-		GetWorld()->SpawnActor<AProjectileBase>(MuzzleLocation, MuzzleDirection.ToOrientationRotator(),
-		                                        SpawnParameters);
+
+		UActorPoolSubsystem::SpawnOrAcquireFromPool(this, AmmoType.ProjectileClass, ProjectileTransform,
+		                                            SpawnParameters);
 	}
 
 	StatusNotificationQueue.NotifyOnShotFired |= 1;
