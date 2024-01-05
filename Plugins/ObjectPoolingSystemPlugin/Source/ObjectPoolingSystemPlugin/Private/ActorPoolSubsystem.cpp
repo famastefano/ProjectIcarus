@@ -26,6 +26,12 @@ static const FAutoConsoleCommandWithWorld CVarActorPoolingEmptyPools(
 	FConsoleCommandWithWorldDelegate::CreateStatic(&UActorPoolSubsystem::EmptyPools)
 );
 
+static const FAutoConsoleCommandWithWorld CVarActorPoolingLogStats(
+	TEXT("ObjectPoolingSystem.LogStats"),
+	TEXT("Logs the statistics of all pools."),
+	FConsoleCommandWithWorldDelegate::CreateStatic(&UActorPoolSubsystem::LogStats)
+);
+
 bool UActorPoolSubsystem::IsPoolingEnabled()
 {
 	return CVarActorPoolingEnabled.GetValueOnAnyThread();
@@ -217,4 +223,24 @@ FPoolStats UActorPoolSubsystem::GetPoolStats(UWorld* World, TSubclassOf<AActor> 
 		return Stats;
 	}
 	return {};
+}
+
+void UActorPoolSubsystem::LogStats(UWorld* World)
+{
+	const auto& StatsCollection = GetAllPoolStats(World);
+	if (StatsCollection.IsEmpty())
+	{
+		UE_LOG(LogObjectPoolingSystem, Display, TEXT("No pool is present."));
+		return;
+	}
+	for (const auto& PoolStats : StatsCollection)
+	{
+		UE_LOGFMT(LogObjectPoolingSystem,
+		          Display,
+		          "Pool {Class} contains {Count} Actors and occupies {Memory} MB.",
+		          PoolStats.TypeClass->GetName(),
+		          PoolStats.NumberOfPooledObjects,
+		          PoolStats.TotalPoolAllocatedSize / (1024*1024)
+		);
+	}
 }

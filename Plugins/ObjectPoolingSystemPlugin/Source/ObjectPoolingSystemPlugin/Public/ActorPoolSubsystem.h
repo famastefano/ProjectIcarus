@@ -50,4 +50,6 @@ public:
 
 	static TArray<FPoolStats> GetAllPoolStats(UWorld* World);
 	static FPoolStats GetPoolStats(UWorld* World, TSubclassOf<AActor> ActorClass);
+
+	static void LogStats(UWorld* World);
 };
