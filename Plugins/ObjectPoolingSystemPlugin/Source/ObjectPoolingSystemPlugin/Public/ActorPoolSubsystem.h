@@ -28,6 +28,8 @@ class OBJECTPOOLINGSYSTEMPLUGIN_API UActorPoolSubsystem : public UWorldSubsystem
 public:
 	static bool IsPoolingEnabled();
 
+	static bool IsLoggingEnabled();
+
 	// Populate a pool by constructing Count instances of ActorClass
 	static void PopulatePool(const UObject* WorldContextObject, TSubclassOf<AActor> ActorClass, int32 Count);
 
