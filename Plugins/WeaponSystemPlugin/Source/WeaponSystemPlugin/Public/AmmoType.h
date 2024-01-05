@@ -28,5 +28,9 @@ struct WEAPONSYSTEMPLUGIN_API FAmmoType
 	TSubclassOf<UDamageType> DamageType;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Damage", meta=(EditCondition="IsHitScan"))
-	FScalableFloat Damage; 
+	FScalableFloat Damage;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Damage",
+		meta=(EditCondition="IsHitScan", UIMin=1, ClampMin=1, Units="Meters"))
+	float MaximumDistance = 1;
 };

@@ -234,13 +234,10 @@ void UBallisticWeaponComponent::Fire()
 	{
 		TRACE_CPUPROFILER_EVENT_SCOPE_ON_CHANNEL_STR("Ballistic Weapon HitScan", WeaponSystemChannel);
 
-		// TODO: Support DamageFalloffCurve after the proper editor has been created
-		constexpr float MaximumDistance = 100'000; // 1000 m
-
 #if WITH_EDITOR
 		if (ShouldDrawLineTraceOnHitScan)
 		{
-			DrawDebugLine(World, MuzzleLocation, MuzzleLocation + MuzzleDirection * MaximumDistance,
+			DrawDebugLine(World, MuzzleLocation, MuzzleLocation + MuzzleDirection * AmmoType.MaximumDistance,
 			              FColor::Red, false, 1.f, 0, 0.5f);
 		}
 #endif
@@ -250,7 +247,7 @@ void UBallisticWeaponComponent::Fire()
 		if (World->LineTraceSingleByChannel(
 			HitResult,
 			MuzzleLocation,
-			MuzzleLocation + MuzzleDirection * MaximumDistance,
+			MuzzleLocation + MuzzleDirection * AmmoType.MaximumDistance,
 			AmmoType.CollisionChannel))
 		{
 #if WITH_EDITOR
