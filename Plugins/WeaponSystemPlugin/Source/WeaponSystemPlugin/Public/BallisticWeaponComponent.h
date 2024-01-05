@@ -127,6 +127,16 @@ public:
 
 #pragma endregion
 
+#pragma region Debug Properties
+#if WITH_EDITORONLY_DATA
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Debug")
+	bool ShouldDrawLineTraceOnHitScan = false;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Debug")
+	bool ShouldLogLineTraceHits = false;
+#endif
+#pragma endregion
+
 #pragma region Delegates
 
 	// Called whenever the weapon needs to reload.

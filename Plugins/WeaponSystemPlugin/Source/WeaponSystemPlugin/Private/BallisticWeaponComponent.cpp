@@ -237,9 +237,12 @@ void UBallisticWeaponComponent::Fire()
 		// TODO: Support DamageFalloffCurve after the proper editor has been created
 		constexpr float MaximumDistance = 100'000; // 1000 m
 
-#if !UE_BUILD_SHIPPING
-		DrawDebugLine(World, MuzzleLocation, MuzzleLocation + MuzzleDirection * MaximumDistance,
-		              FColor::Red, false, 1.f, 0, 0.5f);
+#if WITH_EDITOR
+		if (ShouldDrawLineTraceOnHitScan)
+		{
+			DrawDebugLine(World, MuzzleLocation, MuzzleLocation + MuzzleDirection * MaximumDistance,
+			              FColor::Red, false, 1.f, 0, 0.5f);
+		}
 #endif
 
 		// Async line trace is too imprecise, so we've chosen to use the sync one that yields very close results to expected RPMs
@@ -250,10 +253,12 @@ void UBallisticWeaponComponent::Fire()
 			MuzzleLocation + MuzzleDirection * MaximumDistance,
 			AmmoType.CollisionChannel))
 		{
+#if WITH_EDITOR
 			UE_LOGFMT(LogWeaponSystem, Verbose, "Hit {Actor}, {Distance} cm far",
 			          HitResult.GetActor()->GetName(),
 			          HitResult.Distance);
-			
+#endif
+
 			if (AActor* ActorHit = HitResult.GetActor(); ActorHit && ActorHit->CanBeDamaged())
 			{
 				AActor* Owner = GetOwner();
@@ -288,7 +293,7 @@ void UBallisticWeaponComponent::Fire()
 		FTransform ProjectileTransform;
 		ProjectileTransform.SetLocation(MuzzleLocation);
 		ProjectileTransform.SetRotation(MuzzleDirection.ToOrientationQuat());
-		
+
 		FActorSpawnParameters SpawnParameters{};
 		SpawnParameters.Owner = GetOwner();
 		SpawnParameters.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
