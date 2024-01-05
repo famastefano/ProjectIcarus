@@ -25,6 +25,14 @@ public:
 	virtual void BeginPlay() override;
 	virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
 
+#if WITH_EDITORONLY_DATA
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Debug")
+	bool ShouldLogHits = false;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Debug")
+	bool ShouldTraceLineEachHit = false;
+#endif
+
 protected:
 	UPROPERTY(BlueprintReadOnly)
 	FVector SpawnLocation;
@@ -34,4 +42,7 @@ protected:
 
 	UFUNCTION(BlueprintNativeEvent)
 	bool ShouldDestroyAfterOverlap();
+
+	UFUNCTION(BlueprintNativeEvent)
+	float CalculateDamage(double TotalTraveledDistance, AActor* ActorToDamage);
 };
