@@ -99,10 +99,10 @@ void AProjectileBase::OnActorOverlap_Implementation(AActor* OverlappedActor, AAc
 
 		const FDamageEvent DamageEvent{DamageType};
 		OtherActor->TakeDamage(DamageValue, DamageEvent, Owner->GetInstigatorController(), Owner);
+	}
 
-		if (ShouldDestroyAfterOverlap())
-		{
-			UActorPoolSubsystem::DestroyOrReleaseToPool(GetWorld(), this);
-		}
+	if (ShouldDestroyAfterOverlap())
+	{
+		UActorPoolSubsystem::DestroyOrReleaseToPool(GetWorld(), this);
 	}
 }
