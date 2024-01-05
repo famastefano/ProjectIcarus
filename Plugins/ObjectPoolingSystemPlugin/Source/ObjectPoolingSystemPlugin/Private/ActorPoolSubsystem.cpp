@@ -20,7 +20,7 @@ static TAutoConsoleVariable CVarActorPoolingEnableLogging(
 	ECVF_Default
 );
 
-static const FAutoConsoleCommandWithWorld MyCommand(
+static const FAutoConsoleCommandWithWorld CVarActorPoolingEmptyPools(
 	TEXT("ObjectPoolingSystem.EmptyPools"),
 	TEXT("Empties all the pools."),
 	FConsoleCommandWithWorldDelegate::CreateStatic(&UActorPoolSubsystem::EmptyPools)
