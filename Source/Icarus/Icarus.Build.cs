@@ -14,7 +14,8 @@ public class Icarus : ModuleRules
 			"CoreUObject",
 			"Engine",
 			"InputCore",
-			"WeaponSystemPlugin"
+			"WeaponSystemPlugin",
+			"ObjectPoolingSystemPlugin"
 		});
 	}
 }
