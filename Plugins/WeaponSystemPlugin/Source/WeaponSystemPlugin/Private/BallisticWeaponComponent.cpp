@@ -251,9 +251,12 @@ void UBallisticWeaponComponent::Fire()
 			AmmoType.CollisionChannel))
 		{
 #if WITH_EDITOR
-			UE_LOGFMT(LogWeaponSystem, Verbose, "Hit {Actor}, {Distance} cm far",
-			          HitResult.GetActor()->GetName(),
-			          HitResult.Distance);
+			if (ShouldLogLineTraceHits)
+			{
+				UE_LOGFMT(LogWeaponSystem, Verbose, "Hit {Actor}, {Distance} cm far",
+				          HitResult.GetActor()->GetName(),
+				          HitResult.Distance);
+			}
 #endif
 
 			if (AActor* ActorHit = HitResult.GetActor(); ActorHit && ActorHit->CanBeDamaged())
