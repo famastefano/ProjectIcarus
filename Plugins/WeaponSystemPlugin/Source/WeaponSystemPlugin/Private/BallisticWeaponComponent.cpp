@@ -253,7 +253,7 @@ void UBallisticWeaponComponent::Fire()
 #if WITH_EDITOR
 			if (ShouldLogLineTraceHits)
 			{
-				UE_LOGFMT(LogWeaponSystem, Verbose, "Hit {Actor}, {Distance} cm far",
+				UE_LOGFMT(LogWeaponSystem, Display, "Hit {Actor}, {Distance} cm far",
 				          HitResult.GetActor()->GetName(),
 				          HitResult.Distance);
 			}
