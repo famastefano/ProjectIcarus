@@ -9,7 +9,7 @@
 #include "ProjectileBase.generated.h"
 
 UCLASS(Abstract, Blueprintable, BlueprintType)
-class WEAPONSYSTEMRUNTIME_API AProjectileBase : public AActor
+class WEAPONSYSTEMPLUGIN_API AProjectileBase : public AActor
 {
 	GENERATED_BODY()
 

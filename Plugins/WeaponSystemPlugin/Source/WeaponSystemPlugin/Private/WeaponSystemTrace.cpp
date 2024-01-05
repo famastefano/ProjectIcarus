@@ -1,6 +1,6 @@
 ﻿#include "WeaponSystemTrace.h"
 
-UE_TRACE_CHANNEL_DEFINE(WeaponSystemChannel)
+UE_TRACE_CHANNEL_DEFINE(WeaponSystemChannel);
 
 DEFINE_STAT(STAT_WeaponSystem_Tick);
 DEFINE_STAT(STAT_WeaponSystem_Fire);

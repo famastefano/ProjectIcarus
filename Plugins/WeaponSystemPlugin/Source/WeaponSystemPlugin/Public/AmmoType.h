@@ -11,7 +11,7 @@
  * Defines which ammunition a weapon uses.
  */
 USTRUCT(Blueprintable)
-struct WEAPONSYSTEMRUNTIME_API FAmmoType
+struct WEAPONSYSTEMPLUGIN_API FAmmoType
 {
 	GENERATED_BODY()
 

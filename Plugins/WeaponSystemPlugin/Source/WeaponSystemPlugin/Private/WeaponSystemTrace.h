@@ -3,7 +3,7 @@
 #include "Stats/Stats.h"
 #include "Trace/Trace.h"
 
-UE_TRACE_CHANNEL_EXTERN(WeaponSystemChannel, WEAPONSYSTEMRUNTIME_API);
+UE_TRACE_CHANNEL_EXTERN(WeaponSystemChannel, WEAPONSYSTEMPLUGIN_API);
 DECLARE_STATS_GROUP_VERBOSE(TEXT("Weapon System"), STATGROUP_WeaponSystem, STATCAT_WeaponSystem);
 
 DECLARE_CYCLE_STAT_EXTERN(TEXT("Tick"), STAT_WeaponSystem_Tick, STATGROUP_WeaponSystem,);

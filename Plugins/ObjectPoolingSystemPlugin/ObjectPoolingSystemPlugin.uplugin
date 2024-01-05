@@ -23,9 +23,18 @@
 			"Name": "ObjectPoolingSystemTest",
 			"Type": "DeveloperTool",
 			"LoadingPhase": "Default",
-			"BlacklistTargetConfigurations": [
-				"Shipping"
-			]
+          "BlacklistTargetConfigurations": [
+            "Shipping"
+          ]
+        }
+    ],
+  "Plugins": [
+    {
+      "Name": "TestWorld",
+      "Enabled": true,
+      "BlacklistTargetConfigurations": [
+        "Shipping"
+      ]
 		}
 	]
 }

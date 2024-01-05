@@ -60,7 +60,7 @@ DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FWeaponComponentNotifyStatusChangeSi
  * This component requires ticking to handle firing and reloading.
  */
 UCLASS(ClassGroup=("Weapon Components"), meta=(BlueprintSpawnableComponent))
-class WEAPONSYSTEMRUNTIME_API UBallisticWeaponComponent : public USceneComponent
+class WEAPONSYSTEMPLUGIN_API UBallisticWeaponComponent : public USceneComponent
 {
 	GENERATED_BODY()
 

@@ -22,7 +22,7 @@ public class WeaponSystemTest : ModuleRules
                 
                 "TestWorld",
                 
-                "WeaponSystemRuntime",
+                "WeaponSystemPlugin",
             }
         );
     }

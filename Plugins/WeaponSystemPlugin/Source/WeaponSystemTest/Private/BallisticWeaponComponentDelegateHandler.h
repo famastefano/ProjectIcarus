@@ -4,7 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "UObject/Object.h"
-#include "WeaponSystemRuntime/Public/BallisticWeaponComponent.h"
+#include "WeaponSystemPlugin/Public/BallisticWeaponComponent.h"
 #include "BallisticWeaponComponentDelegateHandler.generated.h"
 
 UCLASS()
