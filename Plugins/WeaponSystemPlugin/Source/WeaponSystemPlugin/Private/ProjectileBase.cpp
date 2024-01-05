@@ -24,6 +24,14 @@ AProjectileBase::AProjectileBase()
 
 	ProjectileMeshComponent = CreateDefaultSubobject<UStaticMeshComponent>("ProjectileMesh");
 	ProjectileMeshComponent->SetupAttachment(RootComponent);
+
+	ProjectileMovementComponent = CreateDefaultSubobject<UProjectileMovementComponent>("ProjectileMovementComponent");
+	ProjectileMovementComponent->UpdatedComponent = RootComponent;
+}
+
+void AProjectileBase::PostInitializeComponents()
+{
+	Super::PostInitializeComponents();
 }
 
 void AProjectileBase::BeginPlay()
@@ -36,6 +44,7 @@ void AProjectileBase::BeginPlay()
 		SetActorLocation(NewLocation, false, nullptr, ETeleportType::TeleportPhysics);
 	}
 	SpawnLocation = GetActorLocation();
+	UE_LOGFMT(LogWeaponSystem, Display, "BeginPlay {Vector}", SpawnLocation.ToString());
 	OnActorBeginOverlap.AddDynamic(this, &AProjectileBase::OnActorOverlap);
 	Super::BeginPlay();
 }
@@ -93,7 +102,7 @@ void AProjectileBase::OnActorOverlap_Implementation(AActor* OverlappedActor, AAc
 
 		if (ShouldDestroyAfterOverlap())
 		{
-			UActorPoolSubsystem::DestroyOrReleaseToPool(this, this);
+			UActorPoolSubsystem::DestroyOrReleaseToPool(GetWorld(), this);
 		}
 	}
 }

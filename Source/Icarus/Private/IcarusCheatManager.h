@@ -12,6 +12,4 @@ class ICARUS_API UIcarusCheatManager : public UCheatManager
 	GENERATED_BODY()
 
 public:
-	UFUNCTION(Exec)
-	void EmptyAllPools() const;
 };

@@ -6,6 +6,8 @@
 #include "ScalableFloat.h"
 
 #include "GameFramework/Actor.h"
+#include "GameFramework/ProjectileMovementComponent.h"
+
 #include "ProjectileBase.generated.h"
 
 UCLASS(Abstract, Blueprintable, BlueprintType)
@@ -16,6 +18,9 @@ class WEAPONSYSTEMPLUGIN_API AProjectileBase : public AActor
 public:
 	AProjectileBase();
 
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
+	TObjectPtr<UProjectileMovementComponent> ProjectileMovementComponent;
+	
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
 	TObjectPtr<UStaticMeshComponent> ProjectileMeshComponent;
 
@@ -28,6 +33,7 @@ public:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="Damage")
 	TSubclassOf<UDamageType> DamageType;
 
+	virtual void PostInitializeComponents() override;
 	virtual void BeginPlay() override;
 	virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
 

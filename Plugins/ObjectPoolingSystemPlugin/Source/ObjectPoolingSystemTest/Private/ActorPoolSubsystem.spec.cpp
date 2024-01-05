@@ -20,7 +20,7 @@ BEGIN_DEFINE_SPEC(FActorPoolSubsystem_Spec, "ObjectPoolingSystem.Runtime.ActorPo
                   | EAutomationTestFlags::ProductFilter)
 
 	TObjectPtr<UTestWorldSubsystem> TestSubsystem;
-	TObjectPtr<AActor> WorldContextObject;
+UWorld* WorldContextObject;
 	FTestWorldHelper World;
 int32 RandSeed = static_cast<int32>(FDateTime::Now().GetTicks());
 
@@ -69,7 +69,7 @@ void FActorPoolSubsystem_Spec::Define()
 				TestSubsystem = GEngine->GetEngineSubsystem<UTestWorldSubsystem>();
 			}
 			World = TestSubsystem->GetPrivateWorld("FActorPoolSubsystem_Spec_World");
-			WorldContextObject = World->SpawnActor<AActor>();
+			WorldContextObject = World->GetWorld();
 		});
 
 		It("Should be empty, if it has never been used", [this]

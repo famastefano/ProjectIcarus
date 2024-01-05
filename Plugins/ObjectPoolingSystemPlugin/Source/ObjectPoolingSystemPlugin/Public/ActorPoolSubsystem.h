@@ -31,23 +31,23 @@ public:
 	static bool IsLoggingEnabled();
 
 	// Populate a pool by constructing Count instances of ActorClass
-	static void PopulatePool(const UObject* WorldContextObject, TSubclassOf<AActor> ActorClass, int32 Count);
+	static void PopulatePool(UWorld* World, TSubclassOf<AActor> ActorClass, int32 Count);
 
 	// IsPoolingEnabled() = true  : if possible, reuses an existing Actor,
 	//                              otherwise spawns a new one, then adds it to the pool. 
 	//                    = false : always spawns a new Actor.
-	static AActor* SpawnOrAcquireFromPool(const UObject* WorldContextObject,
+	static AActor* SpawnOrAcquireFromPool(UWorld* World,
 	                                      TSubclassOf<AActor> ActorClass,
 	                                      const FTransform& SpawnTransform = FTransform::Identity,
 	                                      const FActorSpawnParameters& SpawnParams = {});
 
 	// IsPoolingEnabled() = true  : Actor->EndPlay(Destroyed), then adds it to the pool.
 	//                    = false : Actor->Destroy()
-	static void DestroyOrReleaseToPool(const UObject* WorldContextObject, AActor* Actor);
+	static void DestroyOrReleaseToPool(UWorld* World, AActor* Actor);
 
-	static void EmptyPool(const UObject* WorldContextObject, TSubclassOf<AActor> ActorClass);
-	static void EmptyPools(const UObject* WorldContextObject);
+	static void EmptyPool(UWorld* World, TSubclassOf<AActor> ActorClass);
+	static void EmptyPools(UWorld* World);
 
-	static TArray<FPoolStats> GetAllPoolStats(const UObject* WorldContextObject);
-	static FPoolStats GetPoolStats(const UObject* WorldContextObject, TSubclassOf<AActor> ActorClass);
+	static TArray<FPoolStats> GetAllPoolStats(UWorld* World);
+	static FPoolStats GetPoolStats(UWorld* World, TSubclassOf<AActor> ActorClass);
 };

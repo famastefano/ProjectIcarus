@@ -298,7 +298,7 @@ void UBallisticWeaponComponent::Fire()
 		SpawnParameters.Owner = GetOwner();
 		SpawnParameters.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
 
-		UActorPoolSubsystem::SpawnOrAcquireFromPool(this, AmmoType.ProjectileClass, ProjectileTransform,
+		UActorPoolSubsystem::SpawnOrAcquireFromPool(GetWorld(), AmmoType.ProjectileClass, ProjectileTransform,
 		                                            SpawnParameters);
 	}
 

@@ -20,6 +20,12 @@ static TAutoConsoleVariable CVarActorPoolingEnableLogging(
 	ECVF_Default
 );
 
+static const FAutoConsoleCommandWithWorld MyCommand(
+	TEXT("ObjectPoolingSystem.EmptyPools"),
+	TEXT("Empties all the pools."),
+	FConsoleCommandWithWorldDelegate::CreateStatic(&UActorPoolSubsystem::EmptyPools)
+);
+
 bool UActorPoolSubsystem::IsPoolingEnabled()
 {
 	return CVarActorPoolingEnabled.GetValueOnAnyThread();
@@ -30,9 +36,9 @@ bool UActorPoolSubsystem::IsLoggingEnabled()
 	return CVarActorPoolingEnableLogging.GetValueOnAnyThread();
 }
 
-void UActorPoolSubsystem::PopulatePool(const UObject* WorldContextObject, TSubclassOf<AActor> ActorClass, int32 Count)
+void UActorPoolSubsystem::PopulatePool(UWorld* World, TSubclassOf<AActor> ActorClass, int32 Count)
 {
-	check(WorldContextObject);
+	check(World);
 	check(ActorClass);
 	check(Count > 0);
 
@@ -42,7 +48,7 @@ void UActorPoolSubsystem::PopulatePool(const UObject* WorldContextObject, TSubcl
 		UE_LOGFMT(LogObjectPoolingSystem, Warning,
 		          "Object pooling is disabled in World {Name}, but you asked to populate the pool with {Count} Actors of class {Class}."
 		          ,
-		          WorldContextObject->GetWorld()->GetName(),
+		          World->GetName(),
 		          Count,
 		          ActorClass->GetName());
 	}
@@ -52,8 +58,6 @@ void UActorPoolSubsystem::PopulatePool(const UObject* WorldContextObject, TSubcl
 	{
 		return;
 	}
-
-	UWorld* World = WorldContextObject->GetWorld();
 
 	FActorSpawnParameters Params;
 	Params.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
@@ -68,7 +72,7 @@ void UActorPoolSubsystem::PopulatePool(const UObject* WorldContextObject, TSubcl
 		}
 	}
 
-	UActorPoolSubsystem* Subsystem = WorldContextObject->GetWorld()->GetSubsystem<UActorPoolSubsystem>();
+	UActorPoolSubsystem* Subsystem = World->GetSubsystem<UActorPoolSubsystem>();
 	Subsystem->Pools.FindOrAdd(ActorClass).FreeActors.Append(PooledActors);
 
 	if (IsLoggingEnabled())
@@ -79,16 +83,13 @@ void UActorPoolSubsystem::PopulatePool(const UObject* WorldContextObject, TSubcl
 }
 
 AActor* UActorPoolSubsystem::SpawnOrAcquireFromPool(
-	const UObject* WorldContextObject,
+	UWorld* World,
 	TSubclassOf<AActor> ActorClass,
 	const FTransform& SpawnTransform,
 	const FActorSpawnParameters& SpawnParams)
 {
-	check(WorldContextObject);
-	check(ActorClass)
-
-	UWorld* World = WorldContextObject->GetWorld();
 	check(World);
+	check(ActorClass)
 
 	if (LIKELY(IsPoolingEnabled()))
 	{
@@ -118,14 +119,15 @@ AActor* UActorPoolSubsystem::SpawnOrAcquireFromPool(
 	return Actor;
 }
 
-void UActorPoolSubsystem::DestroyOrReleaseToPool(const UObject* WorldContextObject, AActor* Actor)
+void UActorPoolSubsystem::DestroyOrReleaseToPool(UWorld* World, AActor* Actor)
 {
+	check(World);
 	checkf(Actor, TEXT("Tried to insert nullptr to the pool."));
 
 	if (LIKELY(IsPoolingEnabled()))
 	{
 		Actor->RouteEndPlay(EEndPlayReason::Destroyed);
-		UActorPoolSubsystem* Subsystem = WorldContextObject->GetWorld()->GetSubsystem<UActorPoolSubsystem>();
+		UActorPoolSubsystem* Subsystem = World->GetSubsystem<UActorPoolSubsystem>();
 		auto& [Pool] = Subsystem->Pools.FindOrAdd(Actor->GetClass());
 		checkfSlow(!Pool.Contains(Actor), TEXT("Actor already released to the pool!"));
 		Pool.Add(Actor);
@@ -145,10 +147,11 @@ void UActorPoolSubsystem::DestroyOrReleaseToPool(const UObject* WorldContextObje
 	}
 }
 
-void UActorPoolSubsystem::EmptyPool(const UObject* WorldContextObject, TSubclassOf<AActor> ActorClass)
+void UActorPoolSubsystem::EmptyPool(UWorld* World, TSubclassOf<AActor> ActorClass)
 {
-	check(WorldContextObject);
-	UActorPoolSubsystem* Subsystem = WorldContextObject->GetWorld()->GetSubsystem<UActorPoolSubsystem>();
+	check(World);
+	check(ActorClass);
+	UActorPoolSubsystem* Subsystem = World->GetSubsystem<UActorPoolSubsystem>();
 	if (FActorPool* Pool = Subsystem->Pools.Find(ActorClass))
 	{
 		for (AActor* Actor : Pool->FreeActors)
@@ -163,10 +166,10 @@ void UActorPoolSubsystem::EmptyPool(const UObject* WorldContextObject, TSubclass
 	}
 }
 
-void UActorPoolSubsystem::EmptyPools(const UObject* WorldContextObject)
+void UActorPoolSubsystem::EmptyPools(UWorld* World)
 {
-	check(WorldContextObject);
-	UActorPoolSubsystem* Subsystem = WorldContextObject->GetWorld()->GetSubsystem<UActorPoolSubsystem>();
+	check(World);
+	UActorPoolSubsystem* Subsystem = World->GetSubsystem<UActorPoolSubsystem>();
 	for (auto& [Class, Pool] : Subsystem->Pools)
 	{
 		for (AActor* Actor : Pool.FreeActors)
@@ -181,10 +184,10 @@ void UActorPoolSubsystem::EmptyPools(const UObject* WorldContextObject)
 	}
 }
 
-TArray<FPoolStats> UActorPoolSubsystem::GetAllPoolStats(const UObject* WorldContextObject)
+TArray<FPoolStats> UActorPoolSubsystem::GetAllPoolStats(UWorld* World)
 {
-	check(WorldContextObject);
-	UActorPoolSubsystem* Subsystem = WorldContextObject->GetWorld()->GetSubsystem<UActorPoolSubsystem>();
+	check(World);
+	UActorPoolSubsystem* Subsystem = World->GetSubsystem<UActorPoolSubsystem>();
 	TArray<FPoolStats> PoolStatistics;
 	PoolStatistics.Reserve(Subsystem->Pools.Num());
 	for (const auto& [Class, Pool] : Subsystem->Pools)
@@ -199,11 +202,11 @@ TArray<FPoolStats> UActorPoolSubsystem::GetAllPoolStats(const UObject* WorldCont
 	return PoolStatistics;
 }
 
-FPoolStats UActorPoolSubsystem::GetPoolStats(const UObject* WorldContextObject, TSubclassOf<AActor> ActorClass)
+FPoolStats UActorPoolSubsystem::GetPoolStats(UWorld* World, TSubclassOf<AActor> ActorClass)
 {
-	check(WorldContextObject);
+	check(World);
 	check(ActorClass);
-	UActorPoolSubsystem* Subsystem = WorldContextObject->GetWorld()->GetSubsystem<UActorPoolSubsystem>();
+	UActorPoolSubsystem* Subsystem = World->GetSubsystem<UActorPoolSubsystem>();
 	if (FActorPool* Pool = Subsystem->Pools.Find(ActorClass))
 	{
 		FPoolStats Stats;
