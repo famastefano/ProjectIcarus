@@ -21,10 +21,20 @@ AProjectileBase::AProjectileBase()
 	{
 		RootComponent = CreateDefaultSubobject<USceneComponent>("RootComponent");
 	}
+
+	ProjectileMeshComponent = CreateDefaultSubobject<UStaticMeshComponent>("ProjectileMesh");
+	ProjectileMeshComponent->SetupAttachment(RootComponent);
 }
 
 void AProjectileBase::BeginPlay()
 {
+	if (EnableSpawnOffsetToAvoidWeaponCollision)
+	{
+		const double Offset = ProjectileMeshComponent->Bounds.SphereRadius + 1.f;
+		const FVector InitialLocation = GetActorLocation();
+		const FVector NewLocation = InitialLocation + GetActorForwardVector() * Offset;
+		SetActorLocation(NewLocation, false, nullptr, ETeleportType::TeleportPhysics);
+	}
 	SpawnLocation = GetActorLocation();
 	OnActorBeginOverlap.AddDynamic(this, &AProjectileBase::OnActorOverlap);
 	Super::BeginPlay();

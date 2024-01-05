@@ -16,6 +16,12 @@ class WEAPONSYSTEMPLUGIN_API AProjectileBase : public AActor
 public:
 	AProjectileBase();
 
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
+	TObjectPtr<UStaticMeshComponent> ProjectileMeshComponent;
+
+	UPROPERTY(EditDefaultsOnly, Category="Collision")
+	bool EnableSpawnOffsetToAvoidWeaponCollision = true;
+	
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="Damage")
 	FScalableFloat Damage;
 
