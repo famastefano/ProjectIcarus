@@ -31,6 +31,6 @@ struct WEAPONSYSTEMPLUGIN_API FAmmoType
 	FScalableFloat Damage;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Damage",
-		meta=(EditCondition="IsHitScan", UIMin=1, ClampMin=1, Units="Meters"))
-	float MaximumDistance = 1;
+		meta=(EditCondition="IsHitScan", UIMin=1, ClampMin=1, Units="cm"))
+	float MaximumDistance = 100;
 };
