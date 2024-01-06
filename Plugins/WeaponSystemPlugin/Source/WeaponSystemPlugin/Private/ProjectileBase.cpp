@@ -96,15 +96,15 @@ void AProjectileBase::OnActorOverlap_Implementation(AActor* OverlappedActor, AAc
 
 	if (ShouldTraceLineEachHit)
 	{
-		DrawDebugLine(GetWorld(), SpawnLocation, OtherActor->GetActorLocation(),
+		DrawDebugLine(GetWorld(), SpawnLocation, GetActorLocation(),
 		              FColor::Red, false, 1.f, 0, 0.5f);
 	}
 #endif
 
 	if (OtherActor->CanBeDamaged())
 	{
-		const FVector TargetLocation = OtherActor->GetActorLocation();
-		const double Distance = FVector::Distance(SpawnLocation, TargetLocation);
+		const FVector HitLocation = GetActorLocation();
+		const double Distance = FVector::Distance(SpawnLocation, HitLocation);
 		const float DamageValue = CalculateDamage(Distance, OtherActor);
 
 #if WITH_EDITOR
