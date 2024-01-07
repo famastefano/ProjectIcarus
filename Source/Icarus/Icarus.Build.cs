@@ -8,12 +8,19 @@ public class Icarus : ModuleRules
 	{
 		PCHUsage = PCHUsageMode.UseExplicitOrSharedPCHs;
 
-		PublicDependencyModuleNames.AddRange(new string[]
+		PublicDependencyModuleNames.AddRange(new []
 		{
 			"Core",
 			"CoreUObject",
 			"Engine",
+		});
+		
+		PrivateDependencyModuleNames.AddRange(new []{
 			"InputCore",
+			"EnhancedInput",
+			"GameplayAbilities",
+			"GameplayTags",
+			"GameplayTasks",
 			"WeaponSystemPlugin",
 			"ObjectPoolingSystemPlugin"
 		});
