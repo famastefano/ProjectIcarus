@@ -76,6 +76,13 @@ void AProjectileBase::ReleasedToPool()
 	OnActorBeginOverlap.RemoveDynamic(this, &AProjectileBase::OnActorOverlap);
 }
 
+bool AProjectileBase::ShouldIgnoreHit(AActor* ActorHit) const
+{
+	return ActorHit == GetOwner()
+		&& FVector::DistSquared(SpawnLocation, GetActorLocation())
+		< FVector::DistSquared(SpawnLocation, ActorHit->GetActorLocation());
+}
+
 float AProjectileBase::CalculateDamage_Implementation(double TotalTraveledDistance, AActor* ActorToDamage)
 {
 	return Damage.GetValueAtLevel(TotalTraveledDistance);
@@ -100,6 +107,12 @@ void AProjectileBase::OnActorOverlap_Implementation(AActor* OverlappedActor, AAc
 		              FColor::Red, false, 1.f, 0, 0.5f);
 	}
 #endif
+
+	if (ShouldIgnoreHit(OtherActor))
+	{
+		UE_LOGFMT(LogWeaponSystem, Display, "Ignoring hit.");
+		return;
+	}
 
 	if (OtherActor->CanBeDamaged())
 	{

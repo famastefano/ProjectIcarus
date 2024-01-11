@@ -53,6 +53,9 @@ protected:
 	UPROPERTY(BlueprintReadOnly)
 	FVector SpawnLocation;
 
+	UFUNCTION(BlueprintCallable)
+	bool ShouldIgnoreHit(AActor* ActorHit) const;
+	
 	UFUNCTION(BlueprintNativeEvent)
 	void OnActorOverlap(AActor* OverlappedActor, AActor* OtherActor);
 
